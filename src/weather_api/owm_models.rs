@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::model::WeatherCondition;
+
 
 // Intermediate structs to parse OpenWeatherMap API response
 // These mirror the API's JSON structure more closely
@@ -58,10 +58,4 @@ pub struct OwmCurrentWeatherResponse {
     pub timezone: i32,
 }
 
-// --- Conversion Implementations ---
 
-impl From<&OwmWeather> for WeatherCondition {
-    fn from(owm_weather: &OwmWeather) -> Self {
-        WeatherCondition::from_main(&owm_weather.main)
-    }
-}

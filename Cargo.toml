@@ -10,6 +10,8 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
+open-meteo-rs = "0.0.5" # Check for the latest version on crates.io
+anyhow = "1"
 
 [dev-dependencies]
 assert_cmd = "2"

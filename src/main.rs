@@ -2,7 +2,7 @@ mod model;
 mod weather_api;
 mod display;
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use weather_api::WeatherApiError;
 
 /// A quick weather CLI app written in Rust.
@@ -11,15 +11,32 @@ use weather_api::WeatherApiError;
 struct Cli {
     /// The zip code for which to fetch weather information.
     zip_code: String,
+
+    /// The weather API provider to use.
+    #[arg(short, long, value_enum, default_value_t = ApiProvider::OpenWeatherMap)]
+    api_provider: ApiProvider,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+enum ApiProvider {
+    /// Use OpenWeatherMap API
+    OpenWeatherMap,
+    /// Use Open-Meteo API
+    OpenMeteo,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), WeatherApiError> {
     let cli = Cli::parse();
 
-    let current_weather = weather_api::fetch_and_parse_current_weather(&cli.zip_code).await?;
+    let provider = match cli.api_provider {
+        ApiProvider::OpenWeatherMap => weather_api::WeatherApiProvider::OpenWeatherMap,
+        ApiProvider::OpenMeteo => weather_api::WeatherApiProvider::OpenMeteo,
+    };
+
+    let weather_report = weather_api::get_weather(&cli.zip_code, provider).await?;
     
-    println!("{}", display::format_current_weather(&current_weather));
+    println!("{}", display::format_weather_report(&weather_report));
 
     Ok(())
 }
