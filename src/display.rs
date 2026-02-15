@@ -49,7 +49,7 @@ pub fn format_current_weather(current: &CurrentWeather) -> String {
     let pressure_inhg = (current.pressure_hpa as f64) * 0.02953;
 
     format!(
-        "📍{city_name}, {country} T:{temp:.0}F Hi:{temp_max:.0}F Lo:{temp_min:.0}F {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% P:{pressure_inhg:.2}inHg  🌅{sunrise_time} 🌇{sunset_time}",
+        "📍{city_name}, {country} {temp:.0}F Hi:{temp_max:.0}F Lo:{temp_min:.0}F {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_inhg:.2}Hg  🌅{sunrise_time} 🌇{sunset_time}",
         city_name = current.city_name,
         country = current.country,
         temp = current.temperature,
