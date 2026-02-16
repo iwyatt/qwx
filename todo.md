@@ -1,8 +1,21 @@
-Ok, we've got a working proof of concept. Im not sure the output makes complete sense and Im not confiden that the zip we provided correctly resolved to Maple Valley, WA.
-- Address concerns about output clarity and zip code resolution.
-- Display sunrise and sunset times in the local timezone of the provided zip code.
-- Add atmospheric pressure (converted to inches of mercury) to the output.
-- Implement fetching of state information for US zip codes:
-  - Modify `get_lat_lon_from_zip` to first call the `/zip` endpoint to get `lat`, `lon`, `city_name`, and `country`.
-  - Then, make a second API call to the "reverse geocoding" endpoint (`http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={API_KEY}`) to get more detailed information, including the state.
-  - Update `CurrentWeather` struct, its constructor, and `display.rs` to correctly handle and display the fetched state.
+- [ ] Update `GEMINI.MD` to reflect Open-Meteo as the primary API provider and remove OpenWeatherMap references.
+- [ ] Update `PRODUCT_REQUIREMENTS.md` to reflect Open-Meteo as the primary API provider.
+- [ ] Update `SPECIFICATION.md` to reflect Open-Meteo as the primary API provider, adjusting architecture and dependencies.
+- [ ] Revert `main.rs` to default the API provider to `OpenMeteo`.
+- [ ] Adjust the `todo.md` list: cancel "Complete OpenWeatherMap Integration" and add/modify Open-Meteo related tasks.
+- [ ] Implement fetching of 6-day forecast data from Open-Meteo and ensure all necessary data points (high/low temps, conditions, precipitation chance) are retrieved for the forecast.
+- [ ] Add a `state` field to `model::WeatherReport` to store location state information from Open-Meteo's geocoding response.
+- [ ] Update `src/weather_api/open_meteo.rs` to populate the new `state` field in `model::WeatherReport`.
+- [ ] Modify `display::format_weather_report` to include the state in the output, adhering to the 80-character limit.
+- [ ] Refine Output Formatting: Adjust the output string in `display.rs` to adhere to the 80-character limit, prioritizing essential information.
+- [ ] Update Tests: Uncomment and fix `test_qwx_missing_api_key` if it is still relevant in the Open-Meteo context.
+- [ ] Update `test_qwx_invalid_zip_code_live_api` to correctly test the Open-Meteo API's error response for invalid zip codes or search terms.
+- [ ] Create new tests for the 6-day forecast output and state display for Open-Meteo.
+- [ ] **Feature: Display Hi/Lo Temps in Current Weather Line**
+  - **File to modify:** `src/display.rs`
+  - **Function to modify:** `format_weather_report`
+  - **Specification:**
+    - The current weather line should be updated to include the high and low temperatures for the day.
+    - The new format should be: `📍[Location] [Current Temp]F Hi:[High Temp]F Lo:[Low Temp]F [Weather Emoji] [Wind] [etc...]`
+    - The high and low temperatures should be taken from the `daily_forecast` for the current day. The first entry in `daily_forecast` corresponds to the current day.
+  - **Example:** `📍Jackson, US 39F Hi:39F Lo:38F ☀️ ↙️3kts 💧63% 30.03Hg  🌅07:35 🌇18:08`
