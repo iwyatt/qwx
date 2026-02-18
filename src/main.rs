@@ -13,7 +13,7 @@ struct Cli {
     zip_code: String,
 
     /// The weather API provider to use.
-    #[arg(short, long, value_enum, default_value_t = ApiProvider::OpenWeatherMap)]
+    #[arg(short, long, value_enum, default_value_t = ApiProvider::OpenMeteo)]
     api_provider: ApiProvider,
 }
 

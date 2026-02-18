@@ -46,9 +46,7 @@ This document specifies the technical design and architecture for `qwx`, a Rust-
 
 ## 3. External Dependencies
 
-*   **OpenWeatherMap API:** Used for fetching current weather and forecast data.
-    *   Likely using the "One Call API 3.0" for comprehensive data.
-    *   API Key will be read from the environment variable `OPENWEATHERMAP_API_KEY`.
+*   **Open-Meteo API:** Used for fetching current weather and forecast data.
 *   **Rust Crates:**
     *   `clap`: For robust command-line argument parsing (e.g., zip code input).
     *   `reqwest`: For making asynchronous HTTP requests to the OpenWeatherMap API.
@@ -63,9 +61,13 @@ The application will be invoked as `qwx`.
 ### 4.1. Arguments
 
 *   `<zip_code>` (Required): The 5-digit US zip code for which to fetch weather.
+*   `-f`, `--forecast`: Optional flag to enable the 6-day forecast output (Row 3).
+*   `-H`, `--hourly`: Optional flag to enable the today's hourly forecast output (Row 2).
 
 **Example Usage:**
-`qwx 90210`
+*   `qwx 90210` (Current weather only)
+*   `qwx 90210 -f` (Current weather + 6-day forecast)
+*   `qwx 90210 -f -H` (Current weather + 6-day forecast + hourly forecast)
 
 ## 5. Data Structures (within `model` module)
 
@@ -78,10 +80,10 @@ Data structures will be defined to represent the parsed API responses. Key struc
 
 ## 6. `weather_api` Module Details
 
-### 6.1. API Endpoint Construction
+### 6.1. API Interaction
 
-*   The module will construct the appropriate OpenWeatherMap API URL using the provided zip code and API key.
-*   It will handle unit conversion parameters to request Imperial units directly from the API if supported, or handle conversion internally if not.
+*   The module will utilize the `open-meteo-rs` crate to interact with the Open-Meteo API.
+*   Geocoding will be handled by the `open-meteo-rs` geocoding functionality, using the provided zip code or location name to obtain latitude and longitude.
 
 ### 6.2. Error Handling
 
@@ -91,21 +93,21 @@ Data structures will be defined to represent the parsed API responses. Key struc
 
 ### 6.3. Data Parsing
 
-*   The module will parse the JSON response from OpenWeatherMap into the internal data structures defined in the `model` module.
+*   The `open-meteo-rs` crate will handle the parsing of API responses into its own data structures, which will then be mapped to the internal `WeatherReport` model.
 
 ## 7. `display` Module Details
 
 ### 7.1. Output Logic
 
-The `display` module will be responsible for orchestrating the three-row output as follows:
+The `display` module will be responsible for orchestrating the output rows based on user-provided flags:
 
-*   **Row 1: Current Weather**
+*   **Row 1: Current Weather** (Always displayed)
     *   Format: `Temp°F (FeelsLike°F) | Cond_Emoji Wind_Dir_Emoji Wind_Speed_knots | 🌅 HH:MM 🌇 HH:MM`
     *   Example: `72°F (68°F) | ☀️ ↓ 10kts | 🌅 06:30 🌇 19:45`
-*   **Row 2: Today's Hourly Forecast**
+*   **Row 2: Today's Hourly Forecast** (Displayed if `--hourly` is set)
     *   To be implemented with 3 or 6-hour increments. This will require checking how OpenWeatherMap provides hourly data and whether it aligns with the "same data points as Current Weather" requirement within the 80-character limit. If full details exceed the limit, a condensed format will be used (e.g., `HH:MM Temp°F Cond_Emoji`).
     *   Example (condensed): `10:00 70°F ☀️ | 13:00 75°F ⛅ | 16:00 72°F 🌧️`
-*   **Row 3: Next 6 Days Forecast**
+*   **Row 3: Next 6 Days Forecast** (Displayed if `--forecast` is set)
     *   Format per day: `Day_of_Week Hi°F/Lo°F Cond_Emoji Precip_Chance%`
     *   Example: `Mon 75°F/60°F ☀️ 10% | Tue 70°F/55°F ☁️ 20% | ...`
 
@@ -127,7 +129,7 @@ The `display` module will be responsible for orchestrating the three-row output 
 ## 9. Future Considerations (Out of Scope for initial version)
 
 *   Default location configuration (e.g., via a config file like `~/.config/qwx/config.toml`).
-*   Geolocation based on IP address.
+
 *   Detailed hourly forecast for more than today.
 *   Support for multiple unit systems via CLI flag.
 *   Interactive modes.

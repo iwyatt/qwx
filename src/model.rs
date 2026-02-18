@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc, TimeZone};
-use crate::weather_api::owm_models;
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum WeatherCondition {
@@ -25,26 +24,7 @@ pub enum WeatherCondition {
 }
 
 impl WeatherCondition {
-    pub fn from_main(main: &str) -> Self {
-        match main {
-            "Clear" => WeatherCondition::Clear,
-            "Clouds" => WeatherCondition::Clouds,
-            "Rain" => WeatherCondition::Rain,
-            "Thunderstorm" => WeatherCondition::Thunderstorm,
-            "Snow" => WeatherCondition::Snow,
-            "Mist" => WeatherCondition::Mist,
-            "Fog" => WeatherCondition::Fog,
-            "Haze" => WeatherCondition::Haze,
-            "Smoke" => WeatherCondition::Smoke,
-            "Dust" => WeatherCondition::Dust,
-            "Sand" => WeatherCondition::Sand,
-            "Ash" => WeatherCondition::Ash,
-            "Squall" => WeatherCondition::Squall,
-            "Tornado" => WeatherCondition::Tornado,
-            "Drizzle" => WeatherCondition::Drizzle,
-            _ => WeatherCondition::Unknown,
-        }
-    }
+
 
     // A simplified mapping from WMO Weather Interpretation Codes to our WeatherCondition
     // This is a basic mapping and can be made more sophisticated.
@@ -82,8 +62,18 @@ impl WeatherCondition {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct DailyForecastEntry {
+    pub date: chrono::NaiveDate,
+    pub weather_condition: WeatherCondition,
+    pub temp_max: f64,
+    pub temp_min: f64,
+    pub precipitation_chance: Option<u8>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WeatherReport {
     pub city_name: Option<String>,
+    pub state: Option<String>,
     pub country: Option<String>,
     pub temperature: f64,
     pub feels_like: f64,
@@ -100,37 +90,8 @@ pub struct WeatherReport {
     pub timezone_offset: Option<i32>, // Offset in seconds from UTC
     pub latitude: f64,
     pub longitude: f64,
+    pub daily_forecast: Vec<DailyForecastEntry>,
 }
 
-impl WeatherReport {
-    pub fn from_owm(
-        city_name: &str,
-        country: &str,
-        owm_response: &owm_models::OwmCurrentWeatherResponse,
-    ) -> Self {
-        WeatherReport {
-            city_name: Some(city_name.to_string()),
-            country: Some(country.to_string()),
-            temperature: owm_response.main.temp,
-            feels_like: owm_response.main.feels_like,
-            temp_min: Some(owm_response.main.temp_min),
-            temp_max: Some(owm_response.main.temp_max),
-            pressure: Some(owm_response.main.pressure),
-            humidity: Some(owm_response.main.humidity),
-            wind_speed: owm_response.wind.speed * 3.6, // Convert m/s to km/h for consistency
-            wind_deg: Some(owm_response.wind.deg),
-            sunrise: Utc.timestamp_opt(owm_response.sys.sunrise, 0).single(),
-            sunset: Utc.timestamp_opt(owm_response.sys.sunset, 0).single(),
-            weather_condition: owm_response
-                .weather
-                .get(0)
-                .map(|owm_weather| WeatherCondition::from_main(&owm_weather.main))
-                .unwrap_or(WeatherCondition::Unknown),
-            datetime: Utc.timestamp_opt(owm_response.dt, 0).single().unwrap_or_else(Utc::now),
-            timezone_offset: Some(owm_response.timezone),
-            latitude: 0.0, // OWM Current Weather response does not directly include lat/lon here
-            longitude: 0.0, // OWM Current Weather response does not directly include lat/lon here
-        }
-    }
-}
+
 

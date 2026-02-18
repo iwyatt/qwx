@@ -9,18 +9,21 @@ This document outlines the directives provided by the user for the `qwx` project
 *   **Output Format:** Minimal, UTF-8 based, utilizing emojis where necessary.
 *   **Efficiency:** Be exceptionally efficient with API calls and token usage (Gemini CLI resources are expensive and limited).
 *   **Documentation First:** Prioritize creating supporting documentation (PRD, Spec, `GEMINI.MD`) before writing any code.
+*   **Use the `cargo doc` feature to generate and view documentation that will help you with a task. Include links to appropriate documentation in task notes when creating tasks.
+*   **When beginning a new task, create a git branch to work from. Only merge the branch into main when it passes `cargo check` and work on the task is complete.
+*   **Make sure that context and token usage is carefully managed such that it is appropriate for usage with Google Gemini's `gemini-2.5-flash-lite` which has fairly tight constraints.
 
 ## Gemini CLI Agent Instructions
 
-### Current Task: Documentation Generation
+### Current Task: Implementation Phase
 
-Complete the generation of `PRODUCT_REQUIREMENTS.md` and `SPECIFICATION.md` based on the gathered information.
+The initial documentation generation for `PRODUCT_REQUIREMENTS.md` and `SPECIFICATION.md` is complete. The focus is now on implementing the features outlined in these documents.
 
 ### Project Details & Requirements Summary
 
 **1. Weather API:**
-    *   **Provider:** OpenWeatherMap
-    *   **API Key:** To be supplied via an environment variable. The application should *not* prompt the user for it.
+    *   **Provider:** Open-Meteo
+
 **2. Location Input:**
     *   **Method:** Zip Code
 **3. Units:**
@@ -34,20 +37,20 @@ Complete the generation of `PRODUCT_REQUIREMENTS.md` and `SPECIFICATION.md` base
         *   Sunrise and Sunset Times (separated by appropriate emoji)
     *   **Today's Forecast:**
         *   Same data points as Current Weather Display.
-        *   Hourly forecast in 3 or 6-hour increments.
+        *   Hourly forecast in 3 or 6-hour increments. Note: Output may be condensed to adhere to character limits as specified in `SPECIFICATION.md`.
     *   **Next 6 Days Forecast:**
         *   High/Low Temperatures (°F)
         *   Conditions (represented by specific emojis)
         *   Precipitation Chance (%)
     *   **Emoji Mappings:**
-        *   ☀️: Sunny
-        *   ☁️: Cloudy
-        *   🌧️: Rain
-        *   ⛅: Partly Sunny
-        *   ⛈️: Thunderstorms
-        *   🌤️: Mostly Sunny
-        *   🌦️: Mix of Sun and Rain
-        *   🌨️: Snow Showers
+        *   ☀️: Clear
+        *   ☁️: Clouds
+        *   🌧️: Rain, Drizzle, Freezing Drizzle, Freezing Rain
+        *   ⛈️: Thunderstorm
+        *   🌨️: Snow, Snow Showers
+        *   🌫️: Mist, Fog, Haze, Smoke, Dust, Sand, Ash
+        *   🌪️: Squall, Tornado
+        *   ❓: Unknown
     *   **Output Structure:**
         *   Row 1: Current weather data.
         *   Row 2: Today's hourly forecast.
@@ -63,10 +66,8 @@ Complete the generation of `PRODUCT_REQUIREMENTS.md` and `SPECIFICATION.md` base
 *   **Rust Implementation:** Focus on idiomatic Rust, leveraging appropriate crates for HTTP requests, JSON parsing, and CLI argument parsing.
 *   **Testing:** Implement unit and integration tests.
 *   **Configuration:** Consider `~/.config/qwx/config.toml` for storing default zip code if desired later, but not in initial scope.
-*   **OpenWeatherMap API Specifics:**
-    *   Requires `One Call API 3.0` for full forecast data.
+*   **Open-Meteo API Specifics:**
     *   API endpoint and required parameters will need to be identified during implementation.
-    *   API key named `OPENWEATHERMAP_API_KEY` in environment.
 *   **Emoji Support:** Ensure the terminal environment can render UTF-8 emojis correctly.
 
 ---

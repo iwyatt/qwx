@@ -1,10 +1,10 @@
 use anyhow::{Result, anyhow};
-use chrono::{DateTime, Utc};
 use open_meteo_rs::{geocoding, forecast}; // Import forecast module for Options
-use open_meteo_rs::forecast::{ForecastResult, ForecastResultHourly}; // Only import ForecastResult and ForecastResultHourly
+use open_meteo_rs::forecast::ForecastResult; // Only import ForecastResult and ForecastResultHourly
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use crate::model::{WeatherCondition, WeatherReport};
+use chrono::{Utc, TimeZone, Offset};
+use chrono_tz::Tz;
 
 // --- Open-Meteo API Models (simplified for mapping to existing model.rs) ---
 
@@ -30,6 +30,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         .await
         .map_err(|e| anyhow!("Open-Meteo geocoding API error: {}", e))?; // Convert error to anyhow
 
+
     let first_location = geocoding_response.results
         .and_then(|mut results| results.drain(..).next()) // Take the first result, consuming the vector
         .ok_or_else(|| anyhow!("No location found for search term: {}", search_term))?;
@@ -43,12 +44,26 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     let country_code = first_location.country_code.unwrap_or_else(|| { // Unwrap Option<String>
         panic!("Location country code is missing for search term: {}", search_term);
     });
-    let location_name = first_location.admin4
-        .or(first_location.admin3)
+    let admin1_cloned = first_location.admin1.clone();
+
+    let location_name = first_location.name
+        .or(admin1_cloned.clone())
         .or(first_location.admin2)
-        .or(first_location.admin1)
-        .or(first_location.name) // Fallback to primary name if no admin level is found
+        .or(first_location.admin3)
+        .or(first_location.admin4)
         .unwrap_or_else(|| "Unknown Location".to_string());
+    
+    let state = admin1_cloned;
+    
+    
+    // Extract timezone from geocoding response
+    let timezone_offset_seconds = if let Some(tz_str) = first_location.timezone {
+        tz_str.parse::<Tz>()
+            .ok()
+            .map(|tz| tz.offset_from_utc_datetime(&Utc::now().naive_utc()).fix().local_minus_utc())
+    } else {
+        None
+    };
 
 
     // Now fetch the weather forecast using the obtained lat and lng
@@ -61,19 +76,25 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     opts.wind_speed_unit = Some(open_meteo_rs::forecast::WindSpeedUnit::Kn);
     opts.precipitation_unit = Some(open_meteo_rs::forecast::PrecipitationUnit::Inches);
 
-    let start_date = chrono::Utc::now()
-        .naive_local()
-        .date();
-    opts.start_date = Some(start_date);
-    opts.end_date = Some(start_date + chrono::Duration::days(1));
 
-    // Request current weather and necessary hourly data for min/max temperature
+
     opts.current.push("temperature_2m".into());
-    opts.current.push("precipitation".into());
     opts.current.push("weather_code".into());
     opts.current.push("wind_speed_10m".into());
     opts.current.push("wind_direction_10m".into());
+    opts.current.push("relative_humidity_2m".into());
+    opts.current.push("surface_pressure".into()); // Re-add surface pressure
+
+
     opts.hourly.push("temperature_2m".into()); // For min/max calculation
+    opts.daily.push("sunrise".into());
+    opts.daily.push("sunset".into());
+    opts.daily.push("weather_code".into());
+    opts.daily.push("temperature_2m_max".into());
+    opts.daily.push("temperature_2m_min".into());
+    opts.daily.push("precipitation_sum".into());
+    opts.daily.push("precipitation_probability_max".into());
+    opts.forecast_days = Some(7);
 
     let forecast_response = client.forecast(opts)
         .await
@@ -83,6 +104,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     let om_response = OpenMeteoWeatherResponse {
         forecast_data: forecast_response,
     };
+
 
     let current_weather_data = om_response.forecast_data.current
         .ok_or_else(|| anyhow!("No current weather data found in Open-Meteo response"))?;
@@ -95,20 +117,30 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         .ok_or_else(|| anyhow!("Failed to convert weather_code to f64"))? as u8;
     let weather_condition = WeatherCondition::from_wmo_code(weather_code);
 
-    let temperature_val = current_weather_data.values.get("temperature")
-        .ok_or_else(|| anyhow!("Failed to get temperature from values"))?;
+    let temperature_val = current_weather_data.values.get("temperature_2m")
+        .ok_or_else(|| anyhow!("Failed to get temperature_2m from values"))?;
     let temperature: f64 = temperature_val.value.as_f64()
         .ok_or_else(|| anyhow!("Failed to convert temperature to f64"))?;
 
-    let wind_speed_val = current_weather_data.values.get("wind_speed")
-        .ok_or_else(|| anyhow!("Failed to get wind_speed from values"))?;
+    let wind_speed_val = current_weather_data.values.get("wind_speed_10m")
+        .ok_or_else(|| anyhow!("Failed to convert wind_speed to f64"))?;
     let wind_speed: f64 = wind_speed_val.value.as_f64()
         .ok_or_else(|| anyhow!("Failed to convert wind_speed to f64"))?;
 
-    let wind_direction_val = current_weather_data.values.get("wind_direction")
-        .ok_or_else(|| anyhow!("Failed to get wind_direction from values"))?;
+    let wind_direction_val = current_weather_data.values.get("wind_direction_10m")
+        .ok_or_else(|| anyhow!("Failed to convert wind_direction_10m to f64"))?;
     let wind_direction: f64 = wind_direction_val.value.as_f64()
-        .ok_or_else(|| anyhow!("Failed to convert wind_direction to f64"))?;
+        .ok_or_else(|| anyhow!("Failed to convert wind_direction_10m to f64"))?;
+
+    let humidity_val = current_weather_data.values.get("relative_humidity_2m")
+        .ok_or_else(|| anyhow!("Failed to get relative_humidity_2m from values"))?;
+    let humidity: u8 = humidity_val.value.as_f64()
+        .ok_or_else(|| anyhow!("Failed to convert relative_humidity_2m to f64"))? as u8;
+
+    let pressure_val = current_weather_data.values.get("surface_pressure")
+        .ok_or_else(|| anyhow!("Failed to get surface_pressure from values"))?;
+    let pressure: u16 = pressure_val.value.as_f64()
+        .ok_or_else(|| anyhow!("Failed to convert surface_pressure to f64"))? as u16;
 
     let mut weather_report = WeatherReport {
         city_name: Some(location_name),
@@ -117,17 +149,19 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         feels_like: temperature, // Feels like defaults to temperature if not available
         temp_min: None, // Will be set from hourly data if available
         temp_max: None, // Will be set from hourly data if available
-        pressure: None, // Not directly available in CurrentWeather
-        humidity: None, // Not directly available in CurrentWeather
+        pressure: Some(pressure), // Now available
+        humidity: Some(humidity), // Now available
         wind_speed: wind_speed,
         wind_deg: Some(wind_direction as u16),
         sunrise: None, // Open-Meteo provides daily sunrise/sunset, not in current_weather, handle separately if needed
         sunset: None, // Open-Meteo provides daily sunrise/sunset, not in current_weather, handle separately if needed
         weather_condition,
         datetime,
-        timezone_offset: None, // Can be derived from om_response.timezone if needed
+        timezone_offset: timezone_offset_seconds, // Now derived from geocoding_response
         latitude: lat,
         longitude: lng,
+        daily_forecast: Vec::new(),
+        state,
     };
 
     // Manually calculate min/max temperature from hourly data if available
@@ -143,6 +177,60 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
             weather_report.temp_min = Some(temps.iter().copied().fold(f64::INFINITY, f64::min));
             weather_report.temp_max = Some(temps.iter().copied().fold(f64::NEG_INFINITY, f64::max));
         }
+    }
+
+    // Handle daily data for sunrise/sunset and 6-day forecast
+    if let Some(daily_forecasts_vec) = om_response.forecast_data.daily {
+        let mut daily_entries = Vec::new();
+        for daily_item in daily_forecasts_vec.into_iter() {
+            let daily_values = &daily_item.values;
+
+            let weather_code_val = daily_values.get("weather_code")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u8);
+            let weather_condition = weather_code_val.map(WeatherCondition::from_wmo_code)
+                .unwrap_or(WeatherCondition::Unknown);
+
+            let temp_max = daily_values.get("temperature_2m_max")
+                .and_then(|val| val.value.as_f64());
+            let temp_min = daily_values.get("temperature_2m_min")
+                .and_then(|val| val.value.as_f64());
+
+            let precipitation_chance = daily_values.get("precipitation_probability_max")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u8);
+            
+            // For sunrise/sunset, only take the first day's values if available
+            if weather_report.sunrise.is_none() {
+                let sunrise_val = daily_values.get("sunrise")
+                    .and_then(|item| item.value.as_i64());
+                if let Some(sr_ts) = sunrise_val {
+                    if let Some(sunrise_dt) = Utc.timestamp_opt(sr_ts, 0).single() {
+                        weather_report.sunrise = Some(sunrise_dt);
+                    }
+                }
+            }
+            if weather_report.sunset.is_none() {
+                let sunset_val = daily_values.get("sunset")
+                    .and_then(|item| item.value.as_i64());
+                if let Some(ss_ts) = sunset_val {
+                    if let Some(sunset_dt) = Utc.timestamp_opt(ss_ts, 0).single() {
+                        weather_report.sunset = Some(sunset_dt);
+                    }
+                }
+            }
+
+            if let (Some(temp_max), Some(temp_min)) = (temp_max, temp_min) {
+                daily_entries.push(crate::model::DailyForecastEntry {
+                    date: daily_item.date,
+                    weather_condition,
+                    temp_max,
+                    temp_min,
+                    precipitation_chance,
+                });
+            }
+        }
+        weather_report.daily_forecast = daily_entries;
     }
 
     Ok(weather_report)

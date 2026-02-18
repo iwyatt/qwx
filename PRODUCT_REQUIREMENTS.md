@@ -23,16 +23,15 @@
 
 ### 4.1. Weather Data Retrieval
 
-*   `qwx` shall retrieve weather data from the OpenWeatherMap API.
-*   `qwx` shall obtain the OpenWeatherMap API key from an environment variable (e.g., `OPENWEATHERMAP_API_KEY`).
+*   `qwx` shall retrieve weather data from the Open-Meteo API.
 *   `qwx` shall allow users to specify a location using a Zip Code.
 *   `qwx` shall present all weather data using Imperial units (Fahrenheit for temperature, knots for wind speed).
 
 ### 4.2. Output Display
 
-`qwx` shall display weather information in three distinct sections:
+`qwx` shall display weather information in up to three distinct sections. By default, only the **Current Weather** is displayed. Forecast sections must be explicitly requested via command-line arguments.
 
-#### 4.2.1. Current Weather (Row 1)
+#### 4.2.1. Current Weather (Row 1) [Default]
 
 This section shall display the following data points for the current conditions:
 
@@ -44,11 +43,11 @@ This section shall display the following data points for the current conditions:
 *   Sunrise Time
 *   Sunset Time (separated from sunrise by an appropriate emoji)
 
-#### 4.2.2. Today's Hourly Forecast (Row 2)
+#### 4.2.2. Today's Hourly Forecast (Row 2) [Optional]
 
-This section shall display an hourly forecast for the current day, showing the same data points as the Current Weather, in either 3-hour or 6-hour increments (to be determined during specification).
+This section shall display an hourly forecast for the current day, showing the same data points as the Current Weather, in either 3-hour or 6-hour increments (to be determined during specification). This is only displayed if explicitly requested.
 
-#### 4.2.3. Next 6 Days Forecast (Row 3)
+#### 4.2.3. Next 6 Days Forecast (Row 3) [Optional]
 
 This section shall display a summary forecast for the next 6 days, including:
 
