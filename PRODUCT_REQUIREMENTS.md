@@ -36,6 +36,8 @@
 This section shall display the following data points for the current conditions:
 
 *   Temperature (°F)
+*   Daily High Temperature (°F)
+*   Daily Low Temperature (°F)
 *   "Feels Like" Temperature (°F)
 *   Weather Conditions (represented by specific emojis)
 *   Wind Direction (represented by an arrow emoji, e.g., ↑ for North, → for East)

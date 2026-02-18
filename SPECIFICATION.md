@@ -102,8 +102,8 @@ Data structures will be defined to represent the parsed API responses. Key struc
 The `display` module will be responsible for orchestrating the output rows based on user-provided flags:
 
 *   **Row 1: Current Weather** (Always displayed)
-    *   Format: `Temp°F (FeelsLike°F) | Cond_Emoji Wind_Dir_Emoji Wind_Speed_knots | 🌅 HH:MM 🌇 HH:MM`
-    *   Example: `72°F (68°F) | ☀️ ↓ 10kts | 🌅 06:30 🌇 19:45`
+    *   Format: `📍[Location] [Temp]°F Hi:[High]°F Lo:[Low]°F [Cond_Emoji] [Wind_Emoji][Speed]kts 💧[Humidity]% [Pressure]Hg  🌅 HH:MM 🌇 HH:MM`
+    *   Example: `📍Jackson, US 39°F Hi:39°F Lo:38°F ☀️ ↙️3kts 💧63% 30.03Hg  🌅07:35 🌇18:08`
 *   **Row 2: Today's Hourly Forecast** (Displayed if `--hourly` is set)
     *   To be implemented with 3 or 6-hour increments. This will require checking how OpenWeatherMap provides hourly data and whether it aligns with the "same data points as Current Weather" requirement within the 80-character limit. If full details exceed the limit, a condensed format will be used (e.g., `HH:MM Temp°F Cond_Emoji`).
     *   Example (condensed): `10:00 70°F ☀️ | 13:00 75°F ⛅ | 16:00 72°F 🌧️`

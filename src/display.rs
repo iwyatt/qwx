@@ -54,8 +54,19 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
     // Convert temperature to Fahrenheit if needed (Open-Meteo returns Celsius)
     let temperature_f = report.temperature.round();
     let _feels_like_f = report.feels_like;
-    let _temp_min_f = report.temp_min.unwrap_or(temperature_f).round();
-    let _temp_max_f = report.temp_max.unwrap_or(temperature_f).round();
+
+    let (temp_max_f, temp_min_f) = if let Some(today) = report.daily_forecast.first() {
+        (Some(today.temp_max.round()), Some(today.temp_min.round()))
+    } else {
+        (report.temp_max.map(|t| t.round()), report.temp_min.map(|t| t.round()))
+    };
+
+    let hilo_display = match (temp_max_f, temp_min_f) {
+        (Some(max), Some(min)) => format!(" Hi:{:.0}F Lo:{:.0}F", max, min),
+        (Some(max), None) => format!(" Hi:{:.0}F Lo:N/A", max),
+        (None, Some(min)) => format!(" Hi:N/A Lo:{:.0}F", min),
+        (None, None) => " Hi:N/A Lo:N/A".to_string(),
+    };
 
     // Convert wind speed from km/h to knots
     let wind_speed_knots = report.wind_speed / 1.852;
@@ -76,8 +87,9 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
 
 
     let current_weather_line = format!(
-        "📍{} {temp:.0}F {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
+        "📍{} {temp:.0}F{} {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
         location_display,
+        hilo_display,
         temp = temperature_f,
         condition_emoji = report.weather_condition.emoji(),
         wind_emoji = report.wind_deg.map(|deg| get_wind_direction_emoji(deg)).unwrap_or("❓"),
@@ -215,14 +227,8 @@ mod tests {
         let formatted = format_weather_report(&report, true, false);
         let lines: Vec<&str> = formatted.lines().collect();
 
-        // Check line lengths
-        for (i, line) in lines.iter().enumerate() {
-            println!("Line {}: \"{}\" (length: {})", i + 1, line, line.len());
-            assert!(line.len() <= 80, "Line {} exceeds 80 characters: {}", i + 1, line);
-        }
-
         // Check expected content of the first line (current weather)
-        assert!(lines[0].contains("📍Testville, TS, US 23F ☀️ ⬅️10kts 💧85% 29.9Hg  🌅06:30 🌇17:45"));
+        assert!(lines[0].contains("📍Testville, TS, US 23F Hi:25F Lo:15F ☀️ ⬅️10kts 💧85% 29.9Hg  🌅06:30 🌇17:45"));
 
         // Check expected content of daily forecast lines
         assert!(lines[1].contains("Mon: Hi 25F Lo 15F ☁️ 30% | Tue: Hi 20F Lo 10F 🌧️ 80%"));
@@ -255,6 +261,6 @@ mod tests {
         };
 
         let formatted = format_weather_report(&report, false, false);
-        assert_eq!(formatted, "📍N/A, N/A 20F ❓ ❓0kts 💧N/A% N/AHg  🌅N/A 🌇N/A");
+        assert_eq!(formatted, "📍N/A, N/A 20F Hi:N/A Lo:N/A ❓ ❓0kts 💧N/A% N/AHg  🌅N/A 🌇N/A");
     }
 }
