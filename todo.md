@@ -27,12 +27,12 @@
     - `src/weather_api/open_meteo.rs` (fetch from Open-Meteo API)
     - `src/display.rs` (format for display)
     - Relevant test files.
-- [ ] **Feature Request: Control Forecast Output with CLI Argument**
+- [x] **Feature Request: Control Forecast Output with CLI Argument**
   - [x] Update PRD and Spec for CLI arguments and optional forecast output.
-  - [ ] Add CLI arguments for `--forecast` and `--hourly` in `src/main.rs` using `clap`.
-  - [ ] Update `display::format_weather_report` to accept display options (or update `WeatherReport` model if appropriate).
-  - [ ] Implement conditional logic in `src/display.rs` to only include forecast rows if requested.
-  - [ ] Update integration tests in `tests/cli_tests.rs` to verify new CLI flags.
+  - [x] Add CLI arguments for `--forecast` and `--hourly` in `src/main.rs` using `clap`.
+  - [x] Update `display::format_weather_report` to accept display options (or update `WeatherReport` model if appropriate).
+  - [x] Implement conditional logic in `src/display.rs` to only include forecast rows if requested.
+  - [x] Update integration tests in `tests/cli_tests.rs` to verify new CLI flags.
 - [ ] **Feature Request: Default Location Configuration**
   - **Description:** Implement a mechanism to allow users to set a default location (e.g., via a config file) for which `qwx` will fetch weather data when no zip code is provided as a command-line argument.
   - **Context:** User wants to run `qwx` without parameters for their default location.

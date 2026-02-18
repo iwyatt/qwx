@@ -15,6 +15,14 @@ struct Cli {
     /// The weather API provider to use.
     #[arg(short, long, value_enum, default_value_t = ApiProvider::OpenMeteo)]
     api_provider: ApiProvider,
+
+    /// Display the 6-day forecast.
+    #[arg(short, long)]
+    forecast: bool,
+
+    /// Display the today's hourly forecast.
+    #[arg(short = 'H', long)]
+    hourly: bool,
 }
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -36,7 +44,7 @@ async fn main() -> Result<(), WeatherApiError> {
 
     let weather_report = weather_api::get_weather(&cli.zip_code, provider).await?;
     
-    println!("{}", display::format_weather_report(&weather_report));
+    println!("{}", display::format_weather_report(&weather_report, cli.forecast, cli.hourly));
 
     Ok(())
 }

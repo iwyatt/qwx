@@ -40,7 +40,7 @@ pub fn get_wind_direction_emoji(degrees: u16) -> &'static str {
     }
 }
 
-pub fn format_weather_report(report: &WeatherReport) -> String {
+pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_hourly: bool) -> String {
     let city_name = report.city_name.as_deref().unwrap_or("N/A");
     let state = report.state.as_deref().unwrap_or("");
     let country = report.country.as_deref().unwrap_or("N/A");
@@ -90,8 +90,8 @@ pub fn format_weather_report(report: &WeatherReport) -> String {
 
     let mut output = vec![current_weather_line];
 
-    // Format daily forecast
-    if !report.daily_forecast.is_empty() {
+    // Format daily forecast if requested
+    if show_forecast && !report.daily_forecast.is_empty() {
         let daily_forecast_lines = report.daily_forecast.iter()
             .map(|entry| {
                 let day_name = entry.date.format("%a").to_string(); // Abbreviated day name
@@ -212,7 +212,7 @@ mod tests {
             ],
         };
 
-        let formatted = format_weather_report(&report);
+        let formatted = format_weather_report(&report, true, false);
         let lines: Vec<&str> = formatted.lines().collect();
 
         // Check line lengths
@@ -254,7 +254,7 @@ mod tests {
             daily_forecast: Vec::new(),
         };
 
-        let formatted = format_weather_report(&report);
+        let formatted = format_weather_report(&report, false, false);
         assert_eq!(formatted, "📍N/A, N/A 20F ❓ ❓0kts 💧N/A% N/AHg  🌅N/A 🌇N/A");
     }
 }
