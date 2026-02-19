@@ -23,13 +23,14 @@
 
 ### 4.1. Weather Data Retrieval
 
-*   `qwx` shall retrieve weather data from the Open-Meteo API.
-*   `qwx` shall allow users to specify a location using a Zip Code.
+*   `qwx` shall retrieve weather data from the Open-Meteo API for standard location queries (Zip Codes).
+*   `qwx` shall retrieve aviation-specific weather data (METAR/TAF) from the NOAA Aviation Weather Center (AWC) API when an ICAO or FAA LID is provided.
+*   `qwx` shall allow users to specify a location using a Zip Code, ICAO code (e.g., KSEA), or FAA LID (e.g., SEA).
 *   `qwx` shall present all weather data using Imperial units (Fahrenheit for temperature, knots for wind speed).
 
 ### 4.2. Output Display
 
-`qwx` shall display weather information in up to three distinct sections. By default, only the **Current Weather** is displayed. Forecast sections must be explicitly requested via command-line arguments.
+`qwx` shall display weather information in up to three distinct sections. By default, only the **Current Weather** (or METAR) is displayed. Forecast sections (Daily/Hourly or TAF) must be explicitly requested via command-line arguments.
 
 #### 4.2.1. Current Weather (Row 1) [Default]
 
@@ -58,7 +59,14 @@ This section shall display a summary forecast for the next 6 days, including:
 *   Weather Conditions (represented by specific emojis)
 *   Chance of Precipitation (%)
 
-#### 4.2.4. Output Formatting & Emojis
+#### 4.2.4. Aviation Weather (METAR/TAF)
+
+*   **METAR (Current):** When an aviation identifier is detected, the current weather line shall parse and display the METAR data in an emoji-rich format similar to standard weather.
+*   **TAF (Forecast):** When the forecast flag (`-f`) is used with an aviation identifier, each time block in the TAF shall be displayed as a separate row.
+*   **Safety & Completeness:** **NO DATA TRUNCATION.** All critical fields from a METAR or TAF (Wind, Visibility, Weather, Sky Condition, Temperature/Dewpoint, Altimeter, and Remarks) must be preserved and displayed.
+*   **Line Wrapping:** If a parsed METAR or TAF line exceeds the 80-character target, it must be wrapped to subsequent lines rather than truncated, ensuring all safety-critical information is visible.
+
+#### 4.2.5. Output Formatting & Emojis
 
 *   The output shall be minimal, UTF-8 encoded, and heavily leverage emojis for visual clarity.
 *   Emoji mappings for weather conditions:

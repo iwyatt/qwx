@@ -46,7 +46,8 @@ This document specifies the technical design and architecture for `qwx`, a Rust-
 
 ## 3. External Dependencies
 
-*   **Open-Meteo API:** Used for fetching current weather and forecast data.
+*   **Open-Meteo API:** Used for fetching current weather and forecast data for Zip Codes.
+*   **NOAA Aviation Weather Center (AWC) API:** Used for fetching METAR and TAF data for ICAO/FAA identifiers.
 *   **Rust Crates:**
     *   `clap`: For robust command-line argument parsing (e.g., zip code input).
     *   `reqwest`: For making asynchronous HTTP requests to the OpenWeatherMap API.
@@ -60,14 +61,16 @@ The application will be invoked as `qwx`.
 
 ### 4.1. Arguments
 
-*   `<zip_code>` (Required): The 5-digit US zip code for which to fetch weather.
-*   `-f`, `--forecast`: Optional flag to enable the 6-day forecast output (Row 3).
-*   `-H`, `--hourly`: Optional flag to enable the today's hourly forecast output (Row 2).
+*   `<location>` (Required):
+    *   **Zip Code:** 5 digits (e.g., `90210`).
+    *   **Aviation ID:** 3-4 character alpha-numeric string (e.g., `KSEA`, `SEA`, `S60`).
+*   `-f`, `--forecast`: Optional flag to enable the 6-day forecast or TAF output.
+*   `-H`, `--hourly`: Optional flag to enable the today's hourly forecast output.
 
 **Example Usage:**
-*   `qwx 90210` (Current weather only)
-*   `qwx 90210 -f` (Current weather + 6-day forecast)
-*   `qwx 90210 -f -H` (Current weather + 6-day forecast + hourly forecast)
+*   `qwx 90210` (Standard current weather)
+*   `qwx KSEA` (METAR current weather)
+*   `qwx KSEA -f` (METAR + TAF)
 
 ## 5. Data Structures (within `model` module)
 
@@ -76,12 +79,18 @@ Data structures will be defined to represent the parsed API responses. Key struc
 *   `CurrentWeather`: Holds current temperature, feels_like, weather condition details, wind speed/direction, sunrise/sunset.
 *   `HourlyForecast`: Holds temperature, conditions, wind, etc. for a specific hour.
 *   `DailyForecast`: Holds high/low temperatures, conditions, precipitation chance for a specific day.
-*   `WeatherCondition`: Enum or struct to map OpenWeatherMap condition codes to internal representations and associated emojis.
+*   `MetarReport`: Holds station ID, observation time, wind, visibility, sky condition, temp/dewpoint, altimeter, and raw remarks.
+*   `TafReport`: Holds a collection of `TafLine` entries, each representing a forecast time block.
+*   `WeatherCondition`: Updated to include aviation-specific conditions derived from METAR/TAF codes (e.g., `FG`, `BR`, `TSRA`).
 
 ## 6. `weather_api` Module Details
 
 ### 6.1. API Interaction
 
+*   **Open-Meteo Client:** Used if the location matches a 5-digit zip code.
+*   **NOAA AWC Client:** Used if the location matches a 3-4 character alpha-numeric aviation identifier.
+    *   METAR Endpoint: `https://aviationweather.gov/api/data/metar?ids=[ID]&format=raw`
+    *   TAF Endpoint: `https://aviationweather.gov/api/data/taf?ids=[ID]&format=raw`
 *   The module will utilize the `open-meteo-rs` crate to interact with the Open-Meteo API.
 *   Geocoding will be handled by the `open-meteo-rs` geocoding functionality, using the provided zip code or location name to obtain latitude and longitude.
 
@@ -111,8 +120,18 @@ The `display` module will be responsible for orchestrating the output rows based
     *   Format per day: `Day_of_Week Hi°F/Lo°F Cond_Emoji Precip_Chance%`
     *   Example: `Mon 75°F/60°F ☀️ 10% | Tue 70°F/55°F ☁️ 20% | ...`
 
+#### 7.1.4. Aviation Output (METAR/TAF)
+
+*   **Wrapping Algorithm:**
+    1.  If a formatted line exceeds 80 characters, split it into chunks.
+    2.  Ensure chunks are split at space characters to avoid breaking words or codes.
+    3.  Indent subsequent chunks by 4 spaces to visually group them with the parent row.
+    4.  **Crucial:** Do not omit any tokens from the raw input (e.g., RMK section of METAR).
+
 ### 7.2. Emoji Mapping
 
+*   A aviation-specific mappings (e.g., `FEW` -> 🌤️, `SCT` -> ⛅, `BKN` -> ☁️, `OVC` -> ☁️).
+*   Visibility: 💧 (if low), 🌫️ (if mist/fog).
 *   A clear mapping function or lookup table will translate OpenWeatherMap weather condition codes to the specified UTF-8 emojis.
 *   Wind direction (e.g., N, NE, E, SE, S, SW, W, NW) will be mapped to appropriate arrow emojis (e.g., ↑, ↗, →, ↘, ↓, ↙, ←, ↖).
 
