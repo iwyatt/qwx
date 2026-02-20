@@ -34,12 +34,18 @@
   - [x] Implement conditional logic in `src/display.rs` to only include forecast rows if requested.
   - [x] Update integration tests in `tests/cli_tests.rs` to verify new CLI flags.
 - [ ] **Feature Request: Aviation Weather (METAR/TAF) Support**
-  - [ ] Implement NOAA Aviation Weather Center (AWC) API client in `src/weather_api/noaa_awc.rs`.
-  - [ ] Add `MetarReport` and `TafReport` structs to `src/model.rs`.
-  - [ ] Implement a METAR/TAF raw string parser to extract data points (Wind, Vis, Sky, etc.).
-  - [ ] Update CLI location detection logic in `src/main.rs` (Zip vs. ICAO/FAA LID).
-  - [ ] Implement line-wrapping and indentation logic in `src/display.rs` for long aviation strings.
+  - [x] Implement NOAA Aviation Weather Center (AWC) API client in `src/weather_api/noaa_awc.rs`.
+  - [x] Add `MetarReport` and `TafReport` structs to `src/model.rs`.
+  - [ ] Implement a METAR/TAF raw string parser to extract data points (Wind, Vis, Sky, etc.) and add emojis.
+  - [x] Update CLI location detection logic in `src/main.rs` (Zip vs. ICAO/FAA LID).
+  - [x] Implement line-wrapping and indentation logic in `src/display.rs` for long aviation strings.
   - [ ] Create tests for METAR/TAF parsing and display (ensuring no truncation).
+- [ ] **Feature Request: Auto-Detected Location**
+  - [ ] Research and select a free IP-based geolocation API (e.g., ip-api.com).
+  - [ ] Implement IP-based location detection logic in `src/main.rs` or a new module.
+  - [ ] Integrate auto-detection into the location resolution priority chain (Config Default -> Config Last -> Auto-detect -> Error).
+  - [ ] Update PRD/Spec with details on the chosen API and fallback behavior.
+  - [ ] Add error handling for failed auto-detection.
 - [ ] **Feature Request: Default Location Configuration**
   - **Description:** Implement a mechanism to allow users to set a default location (e.g., via a config file) for which `qwx` will fetch weather data when no zip code is provided as a command-line argument.
   - **Context:** User wants to run `qwx` without parameters for their default location.

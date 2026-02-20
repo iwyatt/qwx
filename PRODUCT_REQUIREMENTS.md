@@ -25,8 +25,21 @@
 
 *   `qwx` shall retrieve weather data from the Open-Meteo API for standard location queries (Zip Codes).
 *   `qwx` shall retrieve aviation-specific weather data (METAR/TAF) from the NOAA Aviation Weather Center (AWC) API when an ICAO or FAA LID is provided.
-*   `qwx` shall allow users to specify a location using a Zip Code, ICAO code (e.g., KSEA), or FAA LID (e.g., SEA).
-*   `qwx` shall present all weather data using Imperial units (Fahrenheit for temperature, knots for wind speed).
+*   **Location Priority:**
+    1.  Command-line argument (Zip, ICAO, or FAA LID).
+    2.  `default_location` specified in the configuration file.
+    3.  `last_location` automatically stored in the configuration file.
+*   `qwx` shall automatically update the `last_location` in the configuration file after every successful weather retrieval.
+
+...
+
+### 4.5. Configuration Management
+
+*   `qwx` shall support a configuration file in the platform-specific standard location (using XDG Base Directory Specification on Linux).
+*   The configuration file shall use the TOML format.
+*   **Custom Formatting:** Users shall be able to define a custom format string for the Current Weather line using variables (e.g., `"{temp} {humidity}"`).
+    *   **Safety Exception:** Custom formatting shall be ignored for Aviation Weather (METAR/TAF) to ensure no critical data is truncated or omitted.
+*   **Future Goal:** Support custom formatting for Hourly and Daily forecast sections.
 
 ### 4.2. Output Display
 
@@ -52,12 +65,14 @@ This section shall display an hourly forecast for the current day, showing the s
 
 #### 4.2.3. Next 6 Days Forecast (Row 3) [Optional]
 
-This section shall display a summary forecast for the next 6 days, including:
-
+This section shall display a summary forecast for the next 6 days, with **each day presented on its own distinct row**. The format for each day shall include:
+*   Day of the Week (abbreviated)
 *   High Temperature (°F)
 *   Low Temperature (°F)
 *   Weather Conditions (represented by specific emojis)
 *   Chance of Precipitation (%)
+
+Each forecast row for a single day shall strive to adhere to the 80-character limit.
 
 #### 4.2.4. Aviation Weather (METAR/TAF)
 

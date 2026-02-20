@@ -49,11 +49,34 @@ This document specifies the technical design and architecture for `qwx`, a Rust-
 *   **Open-Meteo API:** Used for fetching current weather and forecast data for Zip Codes.
 *   **NOAA Aviation Weather Center (AWC) API:** Used for fetching METAR and TAF data for ICAO/FAA identifiers.
 *   **Rust Crates:**
-    *   `clap`: For robust command-line argument parsing (e.g., zip code input).
-    *   `reqwest`: For making asynchronous HTTP requests to the OpenWeatherMap API.
-    *   `tokio`: Asynchronous runtime for `reqwest`.
-    *   `serde` / `serde_json`: For serializing/deserializing JSON data from the API.
-    *   `chrono`: For handling date and time, especially for sunrise/sunset and hourly forecasts.
+    *   `clap`: For robust command-line argument parsing.
+    *   `reqwest`: For making asynchronous HTTP requests.
+    *   `tokio`: Asynchronous runtime.
+    *   `serde` / `serde_json`: For serializing/deserializing data.
+    *   `chrono`: For handling date and time.
+    *   `directories`: For cross-platform configuration directory discovery.
+    *   `toml`: For parsing and serializing the configuration file.
+
+...
+
+## 10. Configuration Management
+
+### 10.1. Storage Location
+*   **Linux:** `~/.config/qwx/config.toml`
+*   **macOS:** `~/Library/Application Support/qwx/config.toml`
+*   **Windows:** `%AppData%\qwx\config.toml`
+
+### 10.2. Structure (TOML)
+```toml
+default_location = "90210"
+last_location = "KSEA"
+current_format = "📍{location} {temp}F {condition_emoji} {wind_emoji}{wind_speed}kts"
+```
+
+### 10.3. Templating Engine
+*   The `display` module will implement a simple parser to replace `{variable}` tokens with data from the `WeatherReport`.
+*   Supported variables: `{location}`, `{temp}`, `{hilo}`, `{temp_max}`, `{temp_min}`, `{feels_like}`, `{condition_emoji}`, `{wind_speed}`, `{wind_dir}`, `{wind_emoji}`, `{humidity}`, `{pressure}`, `{sunrise}`, `{sunset}`.
+*   If `metar` is present in the `WeatherReport`, the template is bypassed in favor of the safety-critical raw output logic.
 
 ## 4. Command-Line Interface (CLI)
 
@@ -64,13 +87,13 @@ The application will be invoked as `qwx`.
 *   `<location>` (Required):
     *   **Zip Code:** 5 digits (e.g., `90210`).
     *   **Aviation ID:** 3-4 character alpha-numeric string (e.g., `KSEA`, `SEA`, `S60`).
-*   `-f`, `--forecast`: Optional flag to enable the 6-day forecast or TAF output.
+*   `-t`, `--taf`: Optional flag to enable the 6-day forecast or TAF output.
 *   `-H`, `--hourly`: Optional flag to enable the today's hourly forecast output.
 
 **Example Usage:**
 *   `qwx 90210` (Standard current weather)
 *   `qwx KSEA` (METAR current weather)
-*   `qwx KSEA -f` (METAR + TAF)
+*   `qwx KSEA -t` (METAR + TAF)
 
 ## 5. Data Structures (within `model` module)
 
@@ -96,9 +119,9 @@ Data structures will be defined to represent the parsed API responses. Key struc
 
 ### 6.2. Error Handling
 
-*   Network errors, invalid API responses (e.g., non-200 status codes), or malformed JSON will be caught.
-*   Errors will be converted into a `qwx` specific `Error` type (e.g., `enum QwxError { NetworkError, ApiError, ParseError }`).
-*   In case of an API error (e.g., invalid zip code, invalid API key), specific error messages will be returned to `main` for graceful display.
+*   Network errors, invalid API responses, or malformed JSON will be caught.
+*   Errors will be converted into a `qwx` specific `Error` type (e.g., `enum QwxError { NetworkError, ApiError, ParseError, LocationResolutionError }`).
+*   In case of an API error or failure in any stage of location resolution, specific user-friendly error messages will be returned for graceful display.
 
 ### 6.3. Data Parsing
 
@@ -117,8 +140,10 @@ The `display` module will be responsible for orchestrating the output rows based
     *   To be implemented with 3 or 6-hour increments. This will require checking how OpenWeatherMap provides hourly data and whether it aligns with the "same data points as Current Weather" requirement within the 80-character limit. If full details exceed the limit, a condensed format will be used (e.g., `HH:MM Temp°F Cond_Emoji`).
     *   Example (condensed): `10:00 70°F ☀️ | 13:00 75°F ⛅ | 16:00 72°F 🌧️`
 *   **Row 3: Next 6 Days Forecast** (Displayed if `--forecast` is set)
-    *   Format per day: `Day_of_Week Hi°F/Lo°F Cond_Emoji Precip_Chance%`
-    *   Example: `Mon 75°F/60°F ☀️ 10% | Tue 70°F/55°F ☁️ 20% | ...`
+    *   Each day of the 6-day forecast will be presented on its own distinct row.
+    *   Format per day: `Day_of_Week Hi°F Lo°F Cond_Emoji Precip_Chance%`
+    *   Example: `Mon 75°F 60°F ☀️ 10%`
+    *   Each daily forecast row shall strive to adhere to the 80-character limit.
 
 #### 7.1.4. Aviation Output (METAR/TAF)
 
