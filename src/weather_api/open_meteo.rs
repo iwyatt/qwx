@@ -161,6 +161,8 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         latitude: lat,
         longitude: lng,
         daily_forecast: Vec::new(),
+        metar: None,
+        taf: None,
         state,
     };
 

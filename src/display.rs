@@ -41,97 +41,151 @@ pub fn get_wind_direction_emoji(degrees: u16) -> &'static str {
 }
 
 pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_hourly: bool) -> String {
-    let city_name = report.city_name.as_deref().unwrap_or("N/A");
-    let state = report.state.as_deref().unwrap_or("");
-    let country = report.country.as_deref().unwrap_or("N/A");
+    let mut output = Vec::new();
 
-    let location_display = if state.is_empty() {
-        format!("{}, {}", city_name, country)
-    } else {
-        format!("{}, {}, {}", city_name, state, country)
-    };
-    
-    // Convert temperature to Fahrenheit if needed (Open-Meteo returns Celsius)
-    let temperature_f = report.temperature.round();
-    let _feels_like_f = report.feels_like;
+    if let Some(metar) = &report.metar {
+        // Aviation Mode: Format METAR and TAF
+        let header = format!("📍{} (METAR)", metar.station_id);
+        output.extend(wrap_line(&format!("{} {}", header, metar.raw), 80));
 
-    let (temp_max_f, temp_min_f) = if let Some(today) = report.daily_forecast.first() {
-        (Some(today.temp_max.round()), Some(today.temp_min.round()))
-    } else {
-        (report.temp_max.map(|t| t.round()), report.temp_min.map(|t| t.round()))
-    };
-
-    let hilo_display = match (temp_max_f, temp_min_f) {
-        (Some(max), Some(min)) => format!(" Hi:{:.0}F Lo:{:.0}F", max, min),
-        (Some(max), None) => format!(" Hi:{:.0}F Lo:N/A", max),
-        (None, Some(min)) => format!(" Hi:N/A Lo:{:.0}F", min),
-        (None, None) => " Hi:N/A Lo:N/A".to_string(),
-    };
-
-    // Convert wind speed from km/h to knots
-    let wind_speed_knots = report.wind_speed / 1.852;
-
-    let local_timezone = report.timezone_offset.map(|offset| FixedOffset::east_opt(offset).unwrap_or(FixedOffset::east_opt(0).unwrap()))
-        .unwrap_or(FixedOffset::east_opt(0).unwrap());
-
-
-    let sunrise_time = report.sunrise.map(|dt| dt.with_timezone(&local_timezone).format("%H:%M").to_string()).unwrap_or_else(|| "N/A".to_string());
-    let sunset_time = report.sunset.map(|dt| dt.with_timezone(&local_timezone).format("%H:%M").to_string()).unwrap_or_else(|| "N/A".to_string());
-
-    let pressure_inhg = report.pressure.map(|p| (p as f64) * 0.02953);
-
-    let pressure_display = match pressure_inhg {
-        Some(p) => format!("{:.1}", p), // Shorten to one decimal and remove "inHg"
-        None => "N/A".to_string(),
-    };
-
-
-    let current_weather_line = format!(
-        "📍{} {temp:.0}F{} {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
-        location_display,
-        hilo_display,
-        temp = temperature_f,
-        condition_emoji = report.weather_condition.emoji(),
-        wind_emoji = report.wind_deg.map(|deg| get_wind_direction_emoji(deg)).unwrap_or("❓"),
-        wind_speed = wind_speed_knots,
-        humidity = report.humidity.map(|h| format!("{}", h)).unwrap_or_else(|| "N/A".to_string()),
-
-        sunrise_time = sunrise_time,
-        sunset_time = sunset_time
-    );
-
-    let mut output = vec![current_weather_line];
-
-    // Format daily forecast if requested
-    if show_forecast && !report.daily_forecast.is_empty() {
-        let daily_forecast_lines = report.daily_forecast.iter()
-            .map(|entry| {
-                let day_name = entry.date.format("%a").to_string(); // Abbreviated day name
-                let condition_emoji = entry.weather_condition.emoji();
-                let precip_chance = entry.precipitation_chance.map(|p| format!("{}%", p)).unwrap_or_else(|| "N/A".to_string());
-                format!("{}: Hi {:.0}F Lo {:.0}F {} {}", day_name, entry.temp_max, entry.temp_min, condition_emoji, precip_chance)
-            })
-            .collect::<Vec<String>>();
-
-        // Group daily forecasts into lines, trying to stay within 80 chars
-        let mut current_line = String::new();
-        for (i, forecast_str) in daily_forecast_lines.iter().enumerate() {
-            if current_line.is_empty() {
-                current_line.push_str(forecast_str);
-            } else if (current_line.len() + 3 + forecast_str.len()) <= 80 { // 3 for " | "
-                current_line.push_str(" | ");
-                current_line.push_str(forecast_str);
+        if show_forecast {
+            if let Some(taf) = &report.taf {
+                output.push("Forecast (TAF):".to_string());
+                for line in &taf.lines {
+                    output.extend(wrap_line(line, 80));
+                }
             } else {
-                output.push(current_line.clone());
-                current_line = forecast_str.clone();
+                output.push("No TAF available for this station.".to_string());
             }
-            if i == daily_forecast_lines.len() - 1 {
-                output.push(current_line.clone());
+        }
+    } else {
+        // Standard Mode
+        let city_name = report.city_name.as_deref().unwrap_or("N/A");
+        let state = report.state.as_deref().unwrap_or("");
+        let country = report.country.as_deref().unwrap_or("N/A");
+
+        let location_display = if state.is_empty() {
+            format!("{}, {}", city_name, country)
+        } else {
+            format!("{}, {}, {}", city_name, state, country)
+        };
+        
+        // Convert temperature to Fahrenheit if needed (Open-Meteo returns Celsius)
+        let temperature_f = report.temperature.round();
+        let _feels_like_f = report.feels_like;
+
+        let (temp_max_f, temp_min_f) = if let Some(today) = report.daily_forecast.first() {
+            (Some(today.temp_max.round()), Some(today.temp_min.round()))
+        } else {
+            (report.temp_max.map(|t| t.round()), report.temp_min.map(|t| t.round()))
+        };
+
+        let hilo_display = match (temp_max_f, temp_min_f) {
+            (Some(max), Some(min)) => format!(" Hi:{:.0}F Lo:{:.0}F", max, min),
+            (Some(max), None) => format!(" Hi:{:.0}F Lo:N/A", max),
+            (None, Some(min)) => format!(" Hi:N/A Lo:{:.0}F", min),
+            (None, None) => " Hi:N/A Lo:N/A".to_string(),
+        };
+
+        // Convert wind speed from km/h to knots
+        let wind_speed_knots = report.wind_speed / 1.852;
+
+        let local_timezone = report.timezone_offset.map(|offset| FixedOffset::east_opt(offset).unwrap_or(FixedOffset::east_opt(0).unwrap()))
+            .unwrap_or(FixedOffset::east_opt(0).unwrap());
+
+
+        let sunrise_time = report.sunrise.map(|dt| dt.with_timezone(&local_timezone).format("%H:%M").to_string()).unwrap_or_else(|| "N/A".to_string());
+        let sunset_time = report.sunset.map(|dt| dt.with_timezone(&local_timezone).format("%H:%M").to_string()).unwrap_or_else(|| "N/A".to_string());
+
+        let pressure_inhg = report.pressure.map(|p| (p as f64) * 0.02953);
+
+        let pressure_display = match pressure_inhg {
+            Some(p) => format!("{:.1}", p), // Shorten to one decimal and remove "inHg"
+            None => "N/A".to_string(),
+        };
+
+
+        let current_weather_line = format!(
+            "📍{} {temp:.0}F{} {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
+            location_display,
+            hilo_display,
+            temp = temperature_f,
+            condition_emoji = report.weather_condition.emoji(),
+            wind_emoji = report.wind_deg.map(|deg| get_wind_direction_emoji(deg)).unwrap_or("❓"),
+            wind_speed = wind_speed_knots,
+            humidity = report.humidity.map(|h| format!("{}", h)).unwrap_or_else(|| "N/A".to_string()),
+
+            sunrise_time = sunrise_time,
+            sunset_time = sunset_time
+        );
+
+        output.push(current_weather_line);
+
+        // Format daily forecast if requested
+        if show_forecast && !report.daily_forecast.is_empty() {
+            let daily_forecast_lines = report.daily_forecast.iter()
+                .map(|entry| {
+                    let day_name = entry.date.format("%a").to_string(); // Abbreviated day name
+                    let condition_emoji = entry.weather_condition.emoji();
+                    let precip_chance = entry.precipitation_chance.map(|p| format!("{}%", p)).unwrap_or_else(|| "N/A".to_string());
+                    format!("{}: Hi {:.0}F Lo {:.0}F {} {}", day_name, entry.temp_max, entry.temp_min, condition_emoji, precip_chance)
+                })
+                .collect::<Vec<String>>();
+
+            // Group daily forecasts into lines, trying to stay within 80 chars
+            let mut current_line = String::new();
+            for (i, forecast_str) in daily_forecast_lines.iter().enumerate() {
+                if current_line.is_empty() {
+                    current_line.push_str(forecast_str);
+                } else if (current_line.len() + 3 + forecast_str.len()) <= 80 { // 3 for " | "
+                    current_line.push_str(" | ");
+                    current_line.push_str(forecast_str);
+                } else {
+                    output.push(current_line.clone());
+                    current_line = forecast_str.clone();
+                }
+                if i == daily_forecast_lines.len() - 1 {
+                    output.push(current_line.clone());
+                }
             }
         }
     }
 
     output.join("\n")
+}
+
+fn wrap_line(text: &str, limit: usize) -> Vec<String> {
+    if text.len() <= limit {
+        return vec![text.to_string()];
+    }
+
+    let mut result = Vec::new();
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let mut current_line = String::new();
+
+    for word in words {
+        let proposed_line = if current_line.is_empty() {
+            word.to_string()
+        } else {
+            format!("{} {}", current_line, word)
+        };
+
+        if proposed_line.len() > limit {
+            if !current_line.is_empty() {
+                result.push(current_line);
+            }
+            // Subsequent lines are indented
+            current_line = format!("    {}", word);
+        } else {
+            current_line = proposed_line;
+        }
+    }
+
+    if !current_line.is_empty() {
+        result.push(current_line);
+    }
+
+    result
 }
 
 #[cfg(test)]
@@ -222,6 +276,8 @@ mod tests {
                     precipitation_chance: Some(20),
                 },
             ],
+            metar: None,
+            taf: None,
         };
 
         let formatted = format_weather_report(&report, true, false);
@@ -258,6 +314,8 @@ mod tests {
             latitude: 0.0,
             longitude: 0.0,
             daily_forecast: Vec::new(),
+            metar: None,
+            taf: None,
         };
 
         let formatted = format_weather_report(&report, false, false);

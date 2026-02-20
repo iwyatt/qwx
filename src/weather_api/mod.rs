@@ -1,12 +1,15 @@
 pub mod open_meteo;
+pub mod noaa_awc;
 
 use std::fmt;
 use super::model::WeatherReport;
+use regex::Regex;
 
 /// Enum to select the weather API provider.
 pub enum WeatherApiProvider {
     OpenWeatherMap,
     OpenMeteo,
+    NoaaAwc,
 }
 
 /// Custom error type for the weather_api module.
@@ -41,16 +44,28 @@ impl From<anyhow::Error> for WeatherApiError {
 }
 
 pub async fn get_weather(
-    zip_code: &str,
+    location: &str,
     provider: WeatherApiProvider,
 ) -> Result<WeatherReport, WeatherApiError> {
-    match provider {
+    let zip_regex = Regex::new(r"^\d{5}$").unwrap();
+    let aviation_regex = Regex::new(r"^[a-zA-Z0-9]{3,4}$").unwrap();
+
+    let actual_provider = match provider {
+        WeatherApiProvider::OpenMeteo if aviation_regex.is_match(location) && !zip_regex.is_match(location) => {
+            WeatherApiProvider::NoaaAwc
+        }
+        p => p,
+    };
+
+    match actual_provider {
         WeatherApiProvider::OpenWeatherMap => {
             Err(WeatherApiError::ApiError("OpenWeatherMap API is currently not implemented.".to_string()))
         },
         WeatherApiProvider::OpenMeteo => {
-            // Use Open-Meteo's own geocoding by passing the search term directly
-            open_meteo::get_current_weather_report(zip_code).await.map_err(Into::into)
+            open_meteo::get_current_weather_report(location).await.map_err(Into::into)
+        },
+        WeatherApiProvider::NoaaAwc => {
+            noaa_awc::get_aviation_weather_report(location).await.map_err(Into::into)
         }
     }
 }

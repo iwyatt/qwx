@@ -71,6 +71,20 @@ pub struct DailyForecastEntry {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct MetarReport {
+    pub raw: String,
+    pub station_id: String,
+    pub observation_time: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TafReport {
+    pub raw: String,
+    pub station_id: String,
+    pub lines: Vec<String>, // Each string is a TAF time block
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WeatherReport {
     pub city_name: Option<String>,
     pub state: Option<String>,
@@ -91,6 +105,8 @@ pub struct WeatherReport {
     pub latitude: f64,
     pub longitude: f64,
     pub daily_forecast: Vec<DailyForecastEntry>,
+    pub metar: Option<MetarReport>,
+    pub taf: Option<TafReport>,
 }
 
 

@@ -9,16 +9,16 @@ use weather_api::WeatherApiError;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// The zip code for which to fetch weather information.
-    zip_code: String,
+    /// The location (Zip Code, ICAO, or FAA LID) for which to fetch weather information.
+    location: String,
 
     /// The weather API provider to use.
     #[arg(short, long, value_enum, default_value_t = ApiProvider::OpenMeteo)]
     api_provider: ApiProvider,
 
-    /// Display the 6-day forecast.
-    #[arg(short, long)]
-    forecast: bool,
+    /// Display the 6-day forecast or TAF.
+    #[arg(short = 't', long = "taf")]
+    taf: bool,
 
     /// Display the today's hourly forecast.
     #[arg(short = 'H', long)]
@@ -42,9 +42,9 @@ async fn main() -> Result<(), WeatherApiError> {
         ApiProvider::OpenMeteo => weather_api::WeatherApiProvider::OpenMeteo,
     };
 
-    let weather_report = weather_api::get_weather(&cli.zip_code, provider).await?;
+    let weather_report = weather_api::get_weather(&cli.location, provider).await?;
     
-    println!("{}", display::format_weather_report(&weather_report, cli.forecast, cli.hourly));
+    println!("{}", display::format_weather_report(&weather_report, cli.taf, cli.hourly));
 
     Ok(())
 }
