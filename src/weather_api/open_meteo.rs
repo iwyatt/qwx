@@ -84,6 +84,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     opts.current.push("wind_speed_10m".into());
     opts.current.push("wind_direction_10m".into());
     opts.current.push("relative_humidity_2m".into());
+    opts.current.push("precipitation_probability".into());
     opts.current.push("surface_pressure".into()); // Re-add surface pressure
 
 
@@ -148,6 +149,10 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     let pressure: u16 = pressure_val.value.as_f64()
         .ok_or_else(|| anyhow!("Failed to convert surface_pressure to f64"))? as u16;
 
+    let current_precipitation_chance: Option<u8> = current_weather_data.values.get("precipitation_probability")
+        .and_then(|val| val.value.as_f64())
+        .map(|v| v as u8);
+
     let mut weather_report = WeatherReport {
         city_name: Some(location_name),
         country: Some(country_code),
@@ -158,6 +163,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         temp_max: None, // Will be set from hourly data if available
         pressure: Some(pressure), // Now available
         humidity: Some(humidity), // Now available
+        current_precipitation_chance,
         wind_speed: wind_speed,
         wind_deg: Some(wind_direction as u16),
         sunrise: None, // Open-Meteo provides daily sunrise/sunset, not in current_weather, handle separately if needed

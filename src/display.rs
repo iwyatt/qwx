@@ -76,7 +76,7 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
         let _feels_like_f = report.feels_like;
 
         let dew_point_display = match dew_point_f {
-            Some(dp) => format!(" ({:.0}F)", dp),
+            Some(dp) => format!(" 💧{:.0}F", dp),
             None => "".to_string(),
         };
 
@@ -111,8 +111,12 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
         };
 
 
+        let current_precip_display = report.current_precipitation_chance
+            .map(|p| format!(" ☔{}%", p))
+            .unwrap_or_else(|| "".to_string());
+
         let current_weather_line = format!(
-            "📍{} {temp:.0}F{} {hilo_display} {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
+            "📍{} {temp:.0}F{} {hilo_display} {condition_emoji} {humidity}%{current_precip_display} {wind_emoji}{wind_speed:.0}kts {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
             location_display,
             dew_point_display,
             temp = temperature_f,
@@ -120,7 +124,7 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
             wind_emoji = report.wind_deg.map(|deg| get_wind_direction_emoji(deg)).unwrap_or("❓"),
             wind_speed = wind_speed_knots,
             humidity = report.humidity.map(|h| format!("{}", h)).unwrap_or_else(|| "N/A".to_string()),
-
+            current_precip_display = current_precip_display,
             sunrise_time = sunrise_time,
             sunset_time = sunset_time
         );
@@ -133,7 +137,7 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
                 .map(|entry| {
                     let day_name = entry.date.format("%a").to_string(); // Abbreviated day name
                     let condition_emoji = entry.weather_condition.emoji();
-                    let precip_chance = entry.precipitation_chance.map(|p| format!("{}%", p)).unwrap_or_else(|| "N/A".to_string());
+                    let precip_chance = entry.precipitation_chance.map(|p| format!("☔{}%", p)).unwrap_or_else(|| "N/A".to_string());
                     format!("{}: Hi {:.0}F Lo {:.0}F {} {}", day_name, entry.temp_max, entry.temp_min, condition_emoji, precip_chance)
                 })
                 .collect::<Vec<String>>();
@@ -230,6 +234,7 @@ mod tests {
             temp_max: Some(28.0), // Celsius
             pressure: Some(1013), // hPa
             humidity: Some(85),
+            current_precipitation_chance: Some(30),
             weather_condition: WeatherCondition::Clear,
             wind_speed: 18.52, // km/h (10 knots)
             wind_deg: Some(270), // West
@@ -291,12 +296,12 @@ mod tests {
         let lines: Vec<&str> = formatted.lines().collect();
 
         // Check expected content of the first line (current weather)
-        assert!(lines[0].contains("📍Testville, TS, US 23F (15F)  Hi:25F Lo:15F ☀️ ⬅️10kts 💧85% 29.9Hg  🌅06:30 🌇17:45"));
+        assert!(lines[0].contains("📍Testville, TS, US 23F 💧15F  Hi:25F Lo:15F ☀️ 85% ☔30% ⬅️10kts 29.9Hg  🌅06:30 🌇17:45"));
 
         // Check expected content of daily forecast lines
-        assert!(lines[1].contains("Mon: Hi 25F Lo 15F ☁️ 30% | Tue: Hi 20F Lo 10F 🌧️ 80%"));
-        assert!(lines[2].contains("Wed: Hi 22F Lo 12F ☀️ 10% | Thu: Hi 5F Lo -2F ❄️ 90%"));
-        assert!(lines[3].contains("Fri: Hi 28F Lo 18F ⛈️ 70% | Sat: Hi 15F Lo 8F 🌫️ 20%"));
+        assert!(lines[1].contains("Mon: Hi 25F Lo 15F ☁️ ☔30% | Tue: Hi 20F Lo 10F 🌧️ ☔80%"));
+        assert!(lines[2].contains("Wed: Hi 22F Lo 12F ☀️ ☔10% | Thu: Hi 5F Lo -2F ❄️ ☔90%"));
+        assert!(lines[3].contains("Fri: Hi 28F Lo 18F ⛈️ ☔70% | Sat: Hi 15F Lo 8F 🌫️ ☔20%"));
     }
 
     #[test]
@@ -312,6 +317,7 @@ mod tests {
             temp_max: None,
             pressure: None,
             humidity: None,
+            current_precipitation_chance: None,
             weather_condition: WeatherCondition::Unknown,
             wind_speed: 0.0, // km/h
             wind_deg: None,
@@ -327,6 +333,6 @@ mod tests {
         };
 
         let formatted = format_weather_report(&report, false, false);
-        assert_eq!(formatted, "📍N/A, N/A 20F  Hi:N/A Lo:N/A ❓ ❓0kts 💧N/A% N/AHg  🌅N/A 🌇N/A");
+        assert_eq!(formatted, "📍N/A, N/A 20F  Hi:N/A Lo:N/A ❓ N/A% ❓0kts N/AHg  🌅N/A 🌇N/A");
     }
 }

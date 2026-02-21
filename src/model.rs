@@ -96,6 +96,7 @@ pub struct WeatherReport {
     pub temp_max: Option<f64>,
     pub pressure: Option<u16>, // hPa
     pub humidity: Option<u8>,
+    pub current_precipitation_chance: Option<u8>,
     pub wind_speed: f64, // km/h (standardized for display)
     pub wind_deg: Option<u16>, // degrees (0-360)
     pub sunrise: Option<DateTime<Utc>>,

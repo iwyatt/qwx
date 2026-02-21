@@ -40,6 +40,7 @@ pub async fn get_aviation_weather_report(icao: &str) -> Result<WeatherReport> {
         temp_max: None,
         pressure: None,
         humidity: None,
+        current_precipitation_chance: None,
         wind_speed: 0.0,
         wind_deg: None,
         sunrise: None,

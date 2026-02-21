@@ -8,7 +8,7 @@
 - [x] Update `src/weather_api/open_meteo.rs` to populate the new `state` field in `model::WeatherReport`.
 - [x] Modify `display::format_weather_report` to include the state in the output, adhering to the 80-character limit.
 - [x] Refine Output Formatting: Adjust the output string in `display.rs` to adhere to the 80-character limit, prioritizing essential information.
-- [ ] Update Tests: Uncomment and fix `test_qwx_missing_api_key` if it is still relevant in the Open-Meteo context.
+- [x] Update Tests: Uncomment and fix `test_qwx_missing_api_key` if it is still relevant in the Open-Meteo context. (OBSOLETE - test not found and not relevant to Open-Meteo)
 - [x] Update `test_qwx_invalid_zip_code_live_api` to correctly test the Open-Meteo API's error response for invalid zip codes or search terms.
 - [x] Create new tests for the 6-day forecast output and state display for Open-Meteo.
 - [x] **Feature: Display Hi/Lo Temps in Current Weather Line**
@@ -23,6 +23,8 @@
   - [x] Update CLI location detection logic in `src/main.rs` (Zip vs. ICAO/FAA LID).
   - [x] Implement line-wrapping and indentation logic in `src/display.rs` for long aviation strings.
 - [x] change snowing emoji to snow flake emoji (❄️)
+- [x] Change the 💧 used next to the percent change of rain, to ☔
+- [x] For the dewpoint, remove the parenthesis, and prefix the dew point temperature value with 💧
 - [ ] **Feature Request: XDG Configuration**
   - [x] Update PRD and Spec for TOML config, location priority, and custom formatting.
   - [ ] Implement configuration loading/saving using `directories` and `toml` crates.
