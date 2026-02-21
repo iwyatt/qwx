@@ -1,17 +1,17 @@
-- [ ] Update `GEMINI.MD` to reflect Open-Meteo as the primary API provider and remove OpenWeatherMap references.
-- [ ] Update `PRODUCT_REQUIREMENTS.md` to reflect Open-Meteo as the primary API provider.
-- [ ] Update `SPECIFICATION.md` to reflect Open-Meteo as the primary API provider, adjusting architecture and dependencies.
-- [ ] Revert `main.rs` to default the API provider to `OpenMeteo`.
-- [ ] Adjust the `todo.md` list: cancel "Complete OpenWeatherMap Integration" and add/modify Open-Meteo related tasks.
-- [ ] Implement fetching of 6-day forecast data from Open-Meteo and ensure all necessary data points (high/low temps, conditions, precipitation chance) are retrieved for the forecast.
-- [ ] Add a `state` field to `model::WeatherReport` to store location state information from Open-Meteo's geocoding response.
-- [ ] Update `src/weather_api/open_meteo.rs` to populate the new `state` field in `model::WeatherReport`.
-- [ ] Modify `display::format_weather_report` to include the state in the output, adhering to the 80-character limit.
-- [ ] Refine Output Formatting: Adjust the output string in `display.rs` to adhere to the 80-character limit, prioritizing essential information.
+- [x] Update `GEMINI.MD` to reflect Open-Meteo as the primary API provider and remove OpenWeatherMap references.
+- [x] Update `PRODUCT_REQUIREMENTS.md` to reflect Open-Meteo as the primary API provider.
+- [x] Update `SPECIFICATION.md` to reflect Open-Meteo as the primary API provider, adjusting architecture and dependencies.
+- [x] Revert `main.rs` to default the API provider to `OpenMeteo`.
+- [x] Adjust the `todo.md` list: cancel "Complete OpenWeatherMap Integration" and add/modify Open-Meteo related tasks.
+- [x] Implement fetching of 6-day forecast data from Open-Meteo and ensure all necessary data points (high/low temps, conditions, precipitation chance) are retrieved for the forecast.
+- [x] Add a `state` field to `model::WeatherReport` to store location state information from Open-Meteo's geocoding response.
+- [x] Update `src/weather_api/open_meteo.rs` to populate the new `state` field in `model::WeatherReport`.
+- [x] Modify `display::format_weather_report` to include the state in the output, adhering to the 80-character limit.
+- [x] Refine Output Formatting: Adjust the output string in `display.rs` to adhere to the 80-character limit, prioritizing essential information.
 - [ ] Update Tests: Uncomment and fix `test_qwx_missing_api_key` if it is still relevant in the Open-Meteo context.
-- [ ] Update `test_qwx_invalid_zip_code_live_api` to correctly test the Open-Meteo API's error response for invalid zip codes or search terms.
-- [ ] Create new tests for the 6-day forecast output and state display for Open-Meteo.
-- [ ] **Feature: Display Hi/Lo Temps in Current Weather Line**
+- [x] Update `test_qwx_invalid_zip_code_live_api` to correctly test the Open-Meteo API's error response for invalid zip codes or search terms.
+- [x] Create new tests for the 6-day forecast output and state display for Open-Meteo.
+- [x] **Feature: Display Hi/Lo Temps in Current Weather Line**
   - **File to modify:** `src/display.rs`
   - **Function to modify:** `format_weather_report`
   - **Specification:**

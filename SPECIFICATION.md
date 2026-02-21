@@ -9,7 +9,7 @@ This document specifies the technical design and architecture for `qwx`, a Rust-
 `qwx` will follow a modular architecture, separating concerns into distinct components:
 
 *   **`main` module:** Handles CLI argument parsing, orchestrates the flow, and calls other modules.
-*   **`weather_api` module:** Manages communication with the OpenWeatherMap API, including request formulation, error handling, and data parsing.
+*   **`weather_api` module:** Manages communication with the Open-Meteo API, including request formulation, error handling, and data parsing.
 *   **`display` module:** Formats and prints the weather data to the console, adhering to the specified output style and emoji usage.
 *   **`model` module:** Defines data structures for weather information received from the API and used internally.
 
@@ -21,7 +21,7 @@ This document specifies the technical design and architecture for `qwx`, a Rust-
          |
          v
 +--------+--------+      +-----------------+
-|   weather_api   |----->| OpenWeatherMap  |
+|   weather_api   |----->|   Open-Meteo    |
 | (API Interaction)|      |       API       |
 +--------+--------+      +-----------------+
          |

@@ -12,6 +12,7 @@ This document outlines the directives provided by the user for the `qwx` project
 *   **Use the `cargo doc` feature to generate and view documentation that will help you with a task. Include links to appropriate documentation in task notes when creating tasks.
 *   **When beginning a new task, create a git branch to work from. Only merge the branch into main when it passes `cargo check` and work on the task is complete.
 *   **Make sure that context and token usage is carefully managed such that it is appropriate for usage with Google Gemini's `gemini-2.5-flash-lite` which has fairly tight constraints.
+*   **Task Management:** Completed tasks MUST be checked off in `todo.md`. Failure to check completed tasks has caused duplicated work.
 
 ## Gemini CLI Agent Instructions
 
