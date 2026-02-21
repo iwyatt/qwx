@@ -101,7 +101,7 @@ The application will be invoked as `qwx`.
 
 Data structures will be defined to represent the parsed API responses. Key structs will include:
 
-*   `CurrentWeather`: Holds current temperature, feels_like, weather condition details, wind speed/direction, sunrise/sunset.
+*   `CurrentWeather`: Holds current temperature, dew_point, feels_like, weather condition details, wind speed/direction, sunrise/sunset.
 *   `HourlyForecast`: Holds temperature, conditions, wind, etc. for a specific hour.
 *   `DailyForecast`: Holds high/low temperatures, conditions, precipitation chance for a specific day.
 *   `MetarReport`: Holds station ID, observation time, wind, visibility, sky condition, temp/dewpoint, altimeter, and raw remarks.
@@ -136,8 +136,8 @@ Data structures will be defined to represent the parsed API responses. Key struc
 The `display` module will be responsible for orchestrating the output rows based on user-provided flags:
 
 *   **Row 1: Current Weather** (Always displayed)
-    *   Format: `📍[Location] [Temp]°F Hi:[High]°F Lo:[Low]°F [Cond_Emoji] [Wind_Emoji][Speed]kts 💧[Humidity]% [Pressure]Hg  🌅 HH:MM 🌇 HH:MM`
-    *   Example: `📍Jackson, US 39°F Hi:39°F Lo:38°F ☀️ ↙️3kts 💧63% 30.03Hg  🌅07:35 🌇18:08`
+    *   Format: `📍[Location] [Temp]°F ([DewPoint]°F) Hi:[High]°F Lo:[Low]°F [Cond_Emoji] [Wind_Emoji][Speed]kts 💧[Humidity]% [Pressure]Hg  🌅 HH:MM 🌇 HH:MM`
+    *   Example: `📍Jackson, US 39°F (34°F) Hi:39°F Lo:38°F ☀️ ↙️3kts 💧63% 30.03Hg  🌅07:35 🌇18:08`
 *   **Row 2: Today's Hourly Forecast** (Displayed if `--hourly` is set)
     *   To be implemented with 3 or 6-hour increments. This will require checking how OpenWeatherMap provides hourly data and whether it aligns with the "same data points as Current Weather" requirement within the 80-character limit. If full details exceed the limit, a condensed format will be used (e.g., `HH:MM Temp°F Cond_Emoji`).
     *   Example (condensed): `10:00 70°F ☀️ | 13:00 75°F ⛅ | 16:00 72°F 🌧️`

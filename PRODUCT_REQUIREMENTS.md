@@ -50,6 +50,7 @@
 This section shall display the following data points for the current conditions:
 
 *   Temperature (°F)
+*   Dew Point Temperature (°F)
 *   Daily High Temperature (°F)
 *   Daily Low Temperature (°F)
 *   "Feels Like" Temperature (°F)
