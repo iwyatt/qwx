@@ -85,14 +85,14 @@ Each forecast row for a single day shall strive to adhere to the 80-character li
 
 *   The output shall be minimal, UTF-8 encoded, and heavily leverage emojis for visual clarity.
 *   Emoji mappings for weather conditions:
-    *   ☀️: Sunny
-    *   ☁️: Cloudy
-    *   🌧️: Rain
-    *   ⛅: Partly Sunny
-    *   ⛈️: Thunderstorms
-    *   🌤️: Mostly Sunny
-    *   🌦️: Mix of Sun and Rain
-    *   ❄️: Snow Showers
+    *   ☀️: Clear
+    *   ☁️: Clouds
+    *   🌧️: Rain, Drizzle, Freezing Drizzle, Freezing Rain
+    *   ⛈️: Thunderstorm
+    *   ❄️: Snow, Snow Showers
+    *   🌫️: Mist, Fog, Haze, Smoke, Dust, Sand, Ash
+    *   🌪️: Squall, Tornado
+    *   ❓: Unknown
 *   The application shall strive to keep the total character count per output row under 80 characters for optimal terminal display.
 
 ### 4.3. Error Handling

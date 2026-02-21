@@ -155,10 +155,18 @@ The `display` module will be responsible for orchestrating the output rows based
 
 ### 7.2. Emoji Mapping
 
-*   A aviation-specific mappings (e.g., `FEW` -> 🌤️, `SCT` -> ⛅, `BKN` -> ☁️, `OVC` -> ☁️).
-*   Visibility: 💧 (if low), 🌫️ (if mist/fog).
-*   A clear mapping function or lookup table will translate OpenWeatherMap weather condition codes to the specified UTF-8 emojis.
-*   Snow conditions: ❄️.*   Wind direction (e.g., N, NE, E, SE, S, SW, W, NW) will be mapped to appropriate arrow emojis (e.g., ↑, ↗, →, ↘, ↓, ↙, ←, ↖).
+*   **Weather Condition Mappings:**
+    *   ☀️: Clear
+    *   ☁️: Clouds
+    *   🌧️: Rain, Drizzle, Freezing Drizzle, Freezing Rain
+    *   ⛈️: Thunderstorm
+    *   ❄️: Snow, Snow Showers
+    *   🌫️: Mist, Fog, Haze, Smoke, Dust, Sand, Ash
+    *   🌪️: Squall, Tornado
+    *   ❓: Unknown
+*   **Aviation-specific mappings:** (e.g., `FEW` -> 🌤️, `SCT` -> ⛅, `BKN` -> ☁️, `OVC` -> ☁️).
+*   **Visibility:** 💧 (if low), 🌫️ (if mist/fog).
+*   **Wind direction:** (e.g., N, NE, E, SE, S, SW, W, NW) will be mapped to appropriate arrow emojis (e.g., ↑, ↗, →, ↘, ↓, ↙, ←, ↖).
 
 ### 7.3. Character Limit Enforcement
 

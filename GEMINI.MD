@@ -20,48 +20,6 @@ This document outlines the directives provided by the user for the `qwx` project
 
 The initial documentation generation for `PRODUCT_REQUIREMENTS.md` and `SPECIFICATION.md` is complete. The focus is now on implementing the features outlined in these documents.
 
-### Project Details & Requirements Summary
-
-**1. Weather API:**
-    *   **Provider:** Open-Meteo
-
-**2. Location Input:**
-    *   **Method:** Zip Code
-**3. Units:**
-    *   **System:** Imperial (Fahrenheit for temperature, knots for wind speed, etc.)
-**4. Data Points & Output:**
-    *   **Current Weather Display:**
-        *   Temperature (°F)
-        *   Dew Point Temperature (°F)
-        *   Conditions (represented by specific emojis)
-        *   Wind Direction (arrow emoji) and Speed (knots)
-        *   Sunrise and Sunset Times (separated by appropriate emoji)
-    *   **Today's Forecast:**
-        *   Same data points as Current Weather Display.
-        *   Hourly forecast in 3 or 6-hour increments. Note: Output may be condensed to adhere to character limits as specified in `SPECIFICATION.md`.
-    *   **Next 6 Days Forecast:**
-        *   High/Low Temperatures (°F)
-        *   Conditions (represented by specific emojis)
-        *   Precipitation Chance (%)
-    *   **Emoji Mappings:**
-        *   ☀️: Clear
-        *   ☁️: Clouds
-        *   🌧️: Rain, Drizzle, Freezing Drizzle, Freezing Rain
-        *   ⛈️: Thunderstorm
-        *   ❄️: Snow, Snow Showers
-        *   🌫️: Mist, Fog, Haze, Smoke, Dust, Sand, Ash
-        *   🌪️: Squall, Tornado
-        *   ❓: Unknown
-    *   **Output Structure:**
-        *   Row 1: Current weather data.
-        *   Row 2: Today's hourly forecast.
-        *   Row 3: Next 6 days forecast.
-        *   Target: Keep total characters per row less than 80, if feasible.
-**5. Error Handling:**
-    *   **Strategy:** Graceful Exit (display a user-friendly message and exit).
-**6. Offline Mode:**
-    *   **Requirement:** None.
-
 ### Future Development Notes (for Gemini CLI Agent)
 
 *   **Rust Implementation:** Focus on idiomatic Rust, leveraging appropriate crates for HTTP requests, JSON parsing, and CLI argument parsing.
