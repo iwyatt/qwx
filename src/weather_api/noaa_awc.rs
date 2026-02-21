@@ -31,10 +31,11 @@ pub async fn get_aviation_weather_report(icao: &str) -> Result<WeatherReport> {
     // The main fields will be largely empty as the display logic will prioritize the METAR/TAF sections.
     Ok(WeatherReport {
         city_name: Some(icao.to_uppercase()),
-        state: None,
-        country: None,
+        country: Some("".to_string()),
         temperature: 0.0, // We'll parse these if needed, but the priority is the raw string
+        dew_point: None,
         feels_like: 0.0,
+        state: None,
         temp_min: None,
         temp_max: None,
         pressure: None,

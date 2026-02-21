@@ -79,6 +79,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
 
 
     opts.current.push("temperature_2m".into());
+    opts.current.push("dew_point_2m".into());
     opts.current.push("weather_code".into());
     opts.current.push("wind_speed_10m".into());
     opts.current.push("wind_direction_10m".into());
@@ -122,6 +123,11 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     let temperature: f64 = temperature_val.value.as_f64()
         .ok_or_else(|| anyhow!("Failed to convert temperature to f64"))?;
 
+    let dew_point_val = current_weather_data.values.get("dew_point_2m")
+        .ok_or_else(|| anyhow!("Failed to get dew_point_2m from values"))?;
+    let dew_point: f64 = dew_point_val.value.as_f64()
+        .ok_or_else(|| anyhow!("Failed to convert dew_point to f64"))?;
+
     let wind_speed_val = current_weather_data.values.get("wind_speed_10m")
         .ok_or_else(|| anyhow!("Failed to convert wind_speed to f64"))?;
     let wind_speed: f64 = wind_speed_val.value.as_f64()
@@ -146,6 +152,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         city_name: Some(location_name),
         country: Some(country_code),
         temperature: temperature,
+        dew_point: Some(dew_point),
         feels_like: temperature, // Feels like defaults to temperature if not available
         temp_min: None, // Will be set from hourly data if available
         temp_max: None, // Will be set from hourly data if available

@@ -72,7 +72,13 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
         
         // Convert temperature to Fahrenheit if needed (Open-Meteo returns Celsius)
         let temperature_f = report.temperature.round();
+        let dew_point_f = report.dew_point.map(|t| t.round());
         let _feels_like_f = report.feels_like;
+
+        let dew_point_display = match dew_point_f {
+            Some(dp) => format!(" ({:.0}F)", dp),
+            None => "".to_string(),
+        };
 
         let (temp_max_f, temp_min_f) = if let Some(today) = report.daily_forecast.first() {
             (Some(today.temp_max.round()), Some(today.temp_min.round()))
@@ -106,9 +112,9 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, _show_
 
 
         let current_weather_line = format!(
-            "📍{} {temp:.0}F{} {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
+            "📍{} {temp:.0}F{} {hilo_display} {condition_emoji} {wind_emoji}{wind_speed:.0}kts 💧{humidity}% {pressure_display}Hg  🌅{sunrise_time} 🌇{sunset_time}",
             location_display,
-            hilo_display,
+            dew_point_display,
             temp = temperature_f,
             condition_emoji = report.weather_condition.emoji(),
             wind_emoji = report.wind_deg.map(|deg| get_wind_direction_emoji(deg)).unwrap_or("❓"),
@@ -218,6 +224,7 @@ mod tests {
             state: Some("TS".to_string()),
             country: Some("US".to_string()),
             temperature: 22.5, // Celsius
+            dew_point: Some(15.0),
             feels_like: 20.0,  // Celsius
             temp_min: Some(18.0), // Celsius
             temp_max: Some(28.0), // Celsius
@@ -284,7 +291,7 @@ mod tests {
         let lines: Vec<&str> = formatted.lines().collect();
 
         // Check expected content of the first line (current weather)
-        assert!(lines[0].contains("📍Testville, TS, US 23F Hi:25F Lo:15F ☀️ ⬅️10kts 💧85% 29.9Hg  🌅06:30 🌇17:45"));
+        assert!(lines[0].contains("📍Testville, TS, US 23F (15F)  Hi:25F Lo:15F ☀️ ⬅️10kts 💧85% 29.9Hg  🌅06:30 🌇17:45"));
 
         // Check expected content of daily forecast lines
         assert!(lines[1].contains("Mon: Hi 25F Lo 15F ☁️ 30% | Tue: Hi 20F Lo 10F 🌧️ 80%"));
@@ -299,6 +306,7 @@ mod tests {
             state: None,
             country: None,
             temperature: 20.0, // Celsius
+            dew_point: None,
             feels_like: 18.0,  // Celsius
             temp_min: None,
             temp_max: None,
@@ -319,6 +327,6 @@ mod tests {
         };
 
         let formatted = format_weather_report(&report, false, false);
-        assert_eq!(formatted, "📍N/A, N/A 20F Hi:N/A Lo:N/A ❓ ❓0kts 💧N/A% N/AHg  🌅N/A 🌇N/A");
+        assert_eq!(formatted, "📍N/A, N/A 20F  Hi:N/A Lo:N/A ❓ ❓0kts 💧N/A% N/AHg  🌅N/A 🌇N/A");
     }
 }

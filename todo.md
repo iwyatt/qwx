@@ -12,10 +12,10 @@
 - [x] Update `test_qwx_invalid_zip_code_live_api` to correctly test the Open-Meteo API's error response for invalid zip codes or search terms.
 - [x] Create new tests for the 6-day forecast output and state display for Open-Meteo.
 - [x] **Feature: Display Hi/Lo Temps in Current Weather Line**
-- [ ] **Feature Request: Implement Dew Point Temperature Display**
-  - [ ] Update `src/model.rs` to add `dew_point` field to `WeatherReport`.
-  - [ ] Update `src/weather_api/open_meteo.rs` to fetch `dew_point_2m` from Open-Meteo.
-  - [ ] Update `src/display.rs` to display Dew Point after the current temperature.
+- [x] **Feature Request: Implement Dew Point Temperature Display**
+  - [x] Update `src/model.rs` to add `dew_point` field to `WeatherReport`.
+  - [x] Update `src/weather_api/open_meteo.rs` to fetch `dew_point_2m` from Open-Meteo.
+  - [x] Update `src/display.rs` to display Dew Point after the current temperature.
 - [x] **Feature Request: Control Forecast Output with CLI Argument**
 - [ ] **Feature Request: Aviation Weather (METAR/TAF) Support**
   - [x] Implement NOAA Aviation Weather Center (AWC) API client in `src/weather_api/noaa_awc.rs`.

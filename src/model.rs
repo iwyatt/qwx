@@ -90,6 +90,7 @@ pub struct WeatherReport {
     pub state: Option<String>,
     pub country: Option<String>,
     pub temperature: f64,
+    pub dew_point: Option<f64>,
     pub feels_like: f64,
     pub temp_min: Option<f64>,
     pub temp_max: Option<f64>,
