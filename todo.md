@@ -55,3 +55,4 @@
     - `PRODUCT_REQUIREMENTS.md` (update to include default location)
     - `SPECIFICATION.md` (detail configuration mechanism)
     - Relevant test files.
+- [x] change snowing emoji to snow flake emoji (❄️)

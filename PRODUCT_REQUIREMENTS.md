@@ -92,7 +92,7 @@ Each forecast row for a single day shall strive to adhere to the 80-character li
     *   ⛈️: Thunderstorms
     *   🌤️: Mostly Sunny
     *   🌦️: Mix of Sun and Rain
-    *   🌨️: Snow Showers
+    *   ❄️: Snow Showers
 *   The application shall strive to keep the total character count per output row under 80 characters for optimal terminal display.
 
 ### 4.3. Error Handling

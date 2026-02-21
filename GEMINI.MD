@@ -48,7 +48,7 @@ The initial documentation generation for `PRODUCT_REQUIREMENTS.md` and `SPECIFIC
         *   ☁️: Clouds
         *   🌧️: Rain, Drizzle, Freezing Drizzle, Freezing Rain
         *   ⛈️: Thunderstorm
-        *   🌨️: Snow, Snow Showers
+        *   ❄️: Snow, Snow Showers
         *   🌫️: Mist, Fog, Haze, Smoke, Dust, Sand, Ash
         *   🌪️: Squall, Tornado
         *   ❓: Unknown

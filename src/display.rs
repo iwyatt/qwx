@@ -288,7 +288,7 @@ mod tests {
 
         // Check expected content of daily forecast lines
         assert!(lines[1].contains("Mon: Hi 25F Lo 15F ☁️ 30% | Tue: Hi 20F Lo 10F 🌧️ 80%"));
-        assert!(lines[2].contains("Wed: Hi 22F Lo 12F ☀️ 10% | Thu: Hi 5F Lo -2F 🌨️ 90%"));
+        assert!(lines[2].contains("Wed: Hi 22F Lo 12F ☀️ 10% | Thu: Hi 5F Lo -2F ❄️ 90%"));
         assert!(lines[3].contains("Fri: Hi 28F Lo 18F ⛈️ 70% | Sat: Hi 15F Lo 8F 🌫️ 20%"));
     }
 

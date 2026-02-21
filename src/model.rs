@@ -53,7 +53,7 @@ impl WeatherCondition {
             WeatherCondition::Clouds => "☁️",
             WeatherCondition::Rain | WeatherCondition::Drizzle | WeatherCondition::FreezingDrizzle | WeatherCondition::FreezingRain => "🌧️",
             WeatherCondition::Thunderstorm => "⛈️",
-            WeatherCondition::Snow => "🌨️",
+            WeatherCondition::Snow => "❄️",
             WeatherCondition::Mist | WeatherCondition::Fog | WeatherCondition::Haze | WeatherCondition::Smoke | WeatherCondition::Dust | WeatherCondition::Sand | WeatherCondition::Ash => "🌫️", // Using a single emoji for atmospheric conditions
             WeatherCondition::Squall | WeatherCondition::Tornado => "🌪️",
             WeatherCondition::Unknown => "❓",
