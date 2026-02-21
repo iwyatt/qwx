@@ -87,13 +87,15 @@ The application will be invoked as `qwx`.
 *   `<location>` (Required):
     *   **Zip Code:** 5 digits (e.g., `90210`).
     *   **Aviation ID:** 3-4 character alpha-numeric string (e.g., `KSEA`, `SEA`, `S60`).
-*   `-t`, `--taf`: Optional flag to enable the 6-day forecast or TAF output.
+*   `-f`, `--forecast`, `-t`, `--taf`: Optional flag to enable the 6-day forecast or TAF output.
 *   `-H`, `--hourly`: Optional flag to enable the today's hourly forecast output.
 
 **Example Usage:**
 *   `qwx 90210` (Standard current weather)
+*   `qwx 90210 -f` (Standard current weather + 6-day forecast)
 *   `qwx KSEA` (METAR current weather)
 *   `qwx KSEA -t` (METAR + TAF)
+*   `qwx KSEA -f` (METAR + TAF)
 
 ## 5. Data Structures (within `model` module)
 

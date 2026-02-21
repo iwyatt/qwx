@@ -17,7 +17,7 @@ struct Cli {
     api_provider: ApiProvider,
 
     /// Display the 6-day forecast or TAF.
-    #[arg(short = 't', long = "taf")]
+    #[arg(short = 't', long = "taf", short_alias = 'f', alias = "forecast")]
     taf: bool,
 
     /// Display the today's hourly forecast.

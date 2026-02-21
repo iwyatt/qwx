@@ -56,3 +56,15 @@
     - `SPECIFICATION.md` (detail configuration mechanism)
     - Relevant test files.
 - [x] change snowing emoji to snow flake emoji (❄️)
+- [ ] **Feature Request: XDG Configuration**
+  - [x] Update PRD and Spec for TOML config, location priority, and custom formatting.
+  - [ ] Implement configuration loading/saving using `directories` and `toml` crates.
+  - [ ] Implement custom formatting template engine in `src/display.rs`.
+- [ ] **Feature Request: Auto-Detected Location**
+  - [x] Update PRD and Spec for IP-based geolocation using `ip-api.com`.
+  - [ ] Implement IP-based detection logic.
+- [ ] **Feature Request: UI/UX Improvements**
+  - [x] Redo forecast format: 1 row = 1 day (Updated in PRD/Spec).
+  - [ ] Implement hourly forecast (Updated in PRD/Spec).
+  - [x] Can -f also work for the NOAA backend as an alias for --taf?
+  - [ ] Implement spinner and API retry logic (Updated in PRD/Spec).

@@ -77,7 +77,7 @@ Each forecast row for a single day shall strive to adhere to the 80-character li
 #### 4.2.4. Aviation Weather (METAR/TAF)
 
 *   **METAR (Current):** When an aviation identifier is detected, the current weather line shall parse and display the METAR data in an emoji-rich format similar to standard weather.
-*   **TAF (Forecast):** When the forecast flag (`-f`) is used with an aviation identifier, each time block in the TAF shall be displayed as a separate row.
+*   **TAF (Forecast):** When the TAF flag (`-t`, `--taf`) or the forecast flag (`-f`, `--forecast`) is used with an aviation identifier, each time block in the TAF shall be displayed as a separate row.
 *   **Safety & Completeness:** **NO DATA TRUNCATION.** All critical fields from a METAR or TAF (Wind, Visibility, Weather, Sky Condition, Temperature/Dewpoint, Altimeter, and Remarks) must be preserved and displayed.
 *   **Line Wrapping:** If a parsed METAR or TAF line exceeds the 80-character target, it must be wrapped to subsequent lines rather than truncated, ensuring all safety-critical information is visible.
 
