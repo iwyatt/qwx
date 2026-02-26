@@ -17,7 +17,7 @@
   - [x] Update `src/weather_api/open_meteo.rs` to fetch `dew_point_2m` from Open-Meteo.
   - [x] Update `src/display.rs` to display Dew Point after the current temperature.
 - [x] **Feature Request: Control Forecast Output with CLI Argument**
-- [ ] **Feature Request: Aviation Weather (METAR/TAF) Support**
+- [x] **Feature Request: Aviation Weather (METAR/TAF) Support**
   - [x] Implement NOAA Aviation Weather Center (AWC) API client in `src/weather_api/noaa_awc.rs`.
   - [x] Add `MetarReport` and `TafReport` structs to `src/model.rs`.
   - [x] Update CLI location detection logic in `src/main.rs` (Zip vs. ICAO/FAA LID).
@@ -25,15 +25,15 @@
 - [x] change snowing emoji to snow flake emoji (❄️)
 - [x] Change the 💧 used next to the percent change of rain, to ☔
 - [x] For the dewpoint, remove the parenthesis, and prefix the dew point temperature value with 💧
-- [ ] **Feature Request: XDG Configuration**
+- [x] **Feature Request: XDG Configuration**
   - [x] Update PRD and Spec for TOML config, location priority, and custom formatting.
-  - [ ] Implement configuration loading/saving using `directories` and `toml` crates.
-  - [ ] Implement custom formatting template engine in `src/display.rs`.
-- [ ] **Feature Request: Auto-Detected Location**
+  - [x] Implement configuration loading/saving using `directories` and `toml` crates.
+  - [x] Implement custom formatting template engine in `src/display.rs`.
+- [x] **Feature Request: Auto-Detected Location**
   - [x] Update PRD and Spec for IP-based geolocation using `ip-api.com`.
-  - [ ] Implement IP-based detection logic.
-- [ ] **Feature Request: UI/UX Improvements**
+  - [x] Implement IP-based detection logic.
+- [x] **Feature Request: UI/UX Improvements**
   - [x] Redo forecast format: 1 row = 1 day (Updated in PRD/Spec).
-  - [ ] Implement hourly forecast (Updated in PRD/Spec).
+  - [x] Implement hourly forecast (Updated in PRD/Spec).
   - [x] Can -f also work for the NOAA backend as an alias for --taf?
-  - [ ] Implement spinner and API retry logic (Updated in PRD/Spec).
+  - [x] Implement spinner and API retry logic (Updated in PRD/Spec).

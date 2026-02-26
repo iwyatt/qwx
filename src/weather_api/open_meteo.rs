@@ -88,7 +88,11 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     opts.current.push("surface_pressure".into()); // Re-add surface pressure
 
 
-    opts.hourly.push("temperature_2m".into()); // For min/max calculation
+    opts.hourly.push("temperature_2m".into());
+    opts.hourly.push("weather_code".into());
+    opts.hourly.push("precipitation_probability".into());
+    opts.hourly.push("wind_speed_10m".into());
+    opts.hourly.push("wind_direction_10m".into());
     opts.daily.push("sunrise".into());
     opts.daily.push("sunset".into());
     opts.daily.push("weather_code".into());
@@ -174,13 +178,14 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         latitude: lat,
         longitude: lng,
         daily_forecast: Vec::new(),
+        hourly_forecast: Vec::new(),
         metar: None,
         taf: None,
         state,
     };
 
     // Manually calculate min/max temperature from hourly data if available
-    if let Some(hourly_data) = om_response.forecast_data.hourly {
+    if let Some(hourly_data) = &om_response.forecast_data.hourly {
         let temps: Vec<f64> = hourly_data.into_iter()
             .filter_map(|item| {
                 item.values.get("temperature_2m")
@@ -192,6 +197,47 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
             weather_report.temp_min = Some(temps.iter().copied().fold(f64::INFINITY, f64::min));
             weather_report.temp_max = Some(temps.iter().copied().fold(f64::NEG_INFINITY, f64::max));
         }
+    }
+
+    if let Some(hourly_data_entries) = om_response.forecast_data.hourly {
+        let mut hourly_entries = Vec::new();
+        for hourly_item in hourly_data_entries.into_iter() {
+            let hourly_values = &hourly_item.values;
+
+            let time = hourly_item.datetime.and_utc();
+
+            let temperature = hourly_values.get("temperature_2m")
+                .and_then(|val| val.value.as_f64())
+                .ok_or_else(|| anyhow!("Failed to get hourly temperature"))?;
+
+            let weather_code = hourly_values.get("weather_code")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u8)
+                .ok_or_else(|| anyhow!("Failed to get hourly weather_code"))?;
+            let weather_condition = WeatherCondition::from_wmo_code(weather_code);
+
+            let precipitation_chance = hourly_values.get("precipitation_probability")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u8);
+
+            let wind_speed = hourly_values.get("wind_speed_10m")
+                .and_then(|val| val.value.as_f64())
+                .ok_or_else(|| anyhow!("Failed to get hourly wind_speed"))?;
+
+            let wind_deg = hourly_values.get("wind_direction_10m")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u16);
+
+            hourly_entries.push(crate::model::HourlyForecastEntry {
+                time,
+                temperature,
+                weather_condition,
+                precipitation_chance,
+                wind_speed,
+                wind_deg,
+            });
+        }
+        weather_report.hourly_forecast = hourly_entries;
     }
 
     // Handle daily data for sunrise/sunset and 6-day forecast

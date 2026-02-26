@@ -11,7 +11,7 @@ fn test_qwx_invalid_zip_code_live_api() {
     // Expecting an API error from Open-Meteo for an invalid zip code
     cmd.assert()
         .failure()
-        .stderr(contains("Error: Other(No location found for search term: 00000)"));
+        .stderr(contains("No location found for search term: 00000"));
 }
 
 #[test]

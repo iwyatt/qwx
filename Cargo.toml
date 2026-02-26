@@ -14,6 +14,9 @@ open-meteo-rs = "0.0.5" # Check for the latest version on crates.io
 anyhow = "1"
 chrono-tz = "0.8"
 regex = "1"
+directories = "5"
+toml = "0.8"
+indicatif = "0.17"
 
 [dev-dependencies]
 assert_cmd = "2"

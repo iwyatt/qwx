@@ -51,6 +51,7 @@ pub async fn get_aviation_weather_report(icao: &str) -> Result<WeatherReport> {
         latitude: 0.0,
         longitude: 0.0,
         daily_forecast: Vec::new(),
+        hourly_forecast: Vec::new(),
         metar: Some(MetarReport {
             raw: metar_raw.trim().to_string(),
             station_id: icao.to_uppercase(),

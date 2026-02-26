@@ -85,6 +85,16 @@ pub struct TafReport {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct HourlyForecastEntry {
+    pub time: DateTime<Utc>,
+    pub temperature: f64,
+    pub weather_condition: WeatherCondition,
+    pub precipitation_chance: Option<u8>,
+    pub wind_speed: f64, // km/h
+    pub wind_deg: Option<u16>, // degrees (0-360)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WeatherReport {
     pub city_name: Option<String>,
     pub state: Option<String>,
@@ -107,6 +117,7 @@ pub struct WeatherReport {
     pub latitude: f64,
     pub longitude: f64,
     pub daily_forecast: Vec<DailyForecastEntry>,
+    pub hourly_forecast: Vec<HourlyForecastEntry>,
     pub metar: Option<MetarReport>,
     pub taf: Option<TafReport>,
 }
