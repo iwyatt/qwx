@@ -37,3 +37,8 @@
   - [x] Implement hourly forecast (Updated in PRD/Spec).
   - [x] Can -f also work for the NOAA backend as an alias for --taf?
   - [x] Implement spinner and API retry logic (Updated in PRD/Spec).
+- [x] **Feature Request: Refined Forecast Options & Display**
+  - [x] Update CLI options: `-f h #` (hourly) and `-f d #` (daily).
+  - [x] Update display logic: one interval per row for both hourly and daily.
+  - [x] Expand hourly forecast to show full weather details.
+  - [x] Update documentation (PRD, Spec) and tests.

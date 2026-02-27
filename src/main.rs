@@ -7,6 +7,7 @@ use clap::{Parser, ValueEnum};
 use crate::config::Config;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
+use regex::Regex;
 
 /// A quick weather CLI app written in Rust.
 #[derive(Parser, Debug)]
@@ -20,13 +21,15 @@ struct Cli {
     #[arg(short, long, value_enum, default_value_t = ApiProvider::OpenMeteo)]
     api_provider: ApiProvider,
 
-    /// Display the 6-day forecast or TAF.
-    #[arg(short = 't', long = "taf", short_alias = 'f', alias = "forecast")]
-    taf: bool,
+    /// Display the forecast (hourly or daily) or TAF.
+    /// For zip codes: -f h [count] or -f d [count].
+    /// For aviation: -f or -t.
+    #[arg(short = 'f', long = "forecast", num_args = 0..=2)]
+    forecast: Option<Vec<String>>,
 
-    /// Display the today's hourly forecast.
-    #[arg(short = 'H', long)]
-    hourly: bool,
+    /// Shortcut for TAF (aviation only).
+    #[arg(short = 't', long = "taf")]
+    taf: bool,
 }
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -95,7 +98,49 @@ async fn main() -> Result<(), anyhow::Error> {
     config.last_location = Some(location_str.clone());
     config.save()?;
 
-    println!("{}", display::format_weather_report(&weather_report, cli.taf, cli.hourly, config.current_format.as_ref()));
+    let mut show_taf = cli.taf;
+    let mut hourly_count = None;
+    let mut daily_count = None;
+
+    if let Some(args) = cli.forecast {
+        if args.is_empty() {
+            let zip_regex = Regex::new(r"^\d{5}$").unwrap();
+            let aviation_regex = Regex::new(r"^[a-zA-Z0-9]{3,4}$").unwrap();
+            if aviation_regex.is_match(&location_str) && !zip_regex.is_match(&location_str) {
+                show_taf = true;
+            } else {
+                anyhow::bail!("Please specify 'h' (hourly) or 'd' (daily) for the forecast, e.g., -f h 12");
+            }
+        } else {
+            match args[0].as_str() {
+                "h" => {
+                    let count = args.get(1).and_then(|s| s.parse::<u8>().ok()).unwrap_or(12);
+                    hourly_count = Some(count);
+                }
+                "d" => {
+                    let count = args.get(1).and_then(|s| s.parse::<u8>().ok()).unwrap_or(7);
+                    daily_count = Some(count);
+                }
+                _ => {
+                    let zip_regex = Regex::new(r"^\d{5}$").unwrap();
+                    let aviation_regex = Regex::new(r"^[a-zA-Z0-9]{3,4}$").unwrap();
+                    if aviation_regex.is_match(&location_str) && !zip_regex.is_match(&location_str) {
+                        show_taf = true;
+                    } else {
+                        anyhow::bail!("Invalid forecast option: '{}'. Use 'h' or 'd'.", args[0]);
+                    }
+                }
+            }
+        }
+    }
+
+    println!("{}", display::format_weather_report(
+        &weather_report,
+        show_taf,
+        hourly_count,
+        daily_count,
+        config.current_format.as_ref()
+    ));
 
     Ok(())
 }

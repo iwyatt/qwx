@@ -42,7 +42,13 @@ pub fn get_wind_direction_emoji(degrees: u16) -> &'static str {
     }
 }
 
-pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, show_hourly: bool, custom_format: Option<&String>) -> String {
+pub fn format_weather_report(
+    report: &WeatherReport,
+    show_taf: bool,
+    hourly_count: Option<u8>,
+    daily_count: Option<u8>,
+    custom_format: Option<&String>
+) -> String {
     let mut output = Vec::new();
 
     if let Some(metar) = &report.metar {
@@ -50,7 +56,7 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, show_h
         let header = format!("📍{} (METAR)", metar.station_id);
         output.extend(wrap_line(&format!("{} {}", header, metar.raw), 80));
 
-        if show_forecast {
+        if show_taf {
             if let Some(taf) = &report.taf {
                 output.push("Forecast (TAF):".to_string());
                 for line in &taf.lines {
@@ -66,39 +72,30 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, show_h
         let current_weather_line = format_current_weather_line(report, custom_format, &default_current_weather_line);
         output.push(current_weather_line);
 
-        // Format daily forecast if requested
-        if show_forecast && !report.daily_forecast.is_empty() {
-            let daily_forecast_lines = report.daily_forecast.iter()
-                .map(|entry| {
-                    let day_name = entry.date.format("%a").to_string(); // Abbreviated day name
-                    let condition_emoji = entry.weather_condition.emoji();
-                    let precip_chance = entry.precipitation_chance.map(|p| format!("☔{}%", p)).unwrap_or_else(|| "N/A".to_string());
-                    format!("{}: Hi {:.0}F Lo {:.0}F {} {}", day_name, entry.temp_max, entry.temp_min, condition_emoji, precip_chance)
-                })
-                .collect::<Vec<String>>();
-
-            // Group daily forecasts into lines, trying to stay within 80 chars
-            let mut current_line = String::new();
-            for (i, forecast_str) in daily_forecast_lines.iter().enumerate() {
-                if current_line.is_empty() {
-                    current_line.push_str(forecast_str);
-                } else if (current_line.len() + 3 + forecast_str.len()) <= 80 { // 3 for " | "
-                    current_line.push_str(" | ");
-                    current_line.push_str(forecast_str);
-                } else {
-                    output.push(current_line.clone());
-                    current_line = forecast_str.clone();
-                }
-                if i == daily_forecast_lines.len() - 1 {
-                    output.push(current_line.clone());
-                }
+        // Format hourly forecast if requested
+        if let Some(count) = hourly_count {
+            if !report.hourly_forecast.is_empty() {
+                output.push("Hourly Forecast:".to_string());
+                output.extend(format_hourly_forecast(report, count as usize));
             }
         }
 
-        // Format hourly forecast if requested
-        if show_hourly && !report.hourly_forecast.is_empty() {
-            output.push("Hourly Forecast:".to_string());
-            output.extend(format_hourly_forecast(report));
+        // Format daily forecast if requested
+        if let Some(count) = daily_count {
+            if !report.daily_forecast.is_empty() {
+                output.push("Daily Forecast:".to_string());
+                let daily_forecast_lines = report.daily_forecast.iter()
+                    .take(count as usize)
+                    .map(|entry| {
+                        let day_name = entry.date.format("%a").to_string(); // Abbreviated day name
+                        let condition_emoji = entry.weather_condition.emoji();
+                        let precip_chance = entry.precipitation_chance.map(|p| format!("☔{}%", p)).unwrap_or_else(|| "".to_string());
+                        format!("{}: Hi {:.0}F Lo {:.0}F {} {}", day_name, entry.temp_max, entry.temp_min, condition_emoji, precip_chance)
+                    })
+                    .collect::<Vec<String>>();
+                
+                output.extend(daily_forecast_lines);
+            }
         }
     }
 
@@ -106,36 +103,33 @@ pub fn format_weather_report(report: &WeatherReport, show_forecast: bool, show_h
 }
 
 // Helper to format hourly forecast data
-fn format_hourly_forecast(report: &WeatherReport) -> Vec<String> {
+fn format_hourly_forecast(report: &WeatherReport, count: usize) -> Vec<String> {
     let mut hourly_output_lines = Vec::new();
-    let mut current_line = String::new();
     let local_timezone = report.timezone_offset.map(|offset| FixedOffset::east_opt(offset).unwrap_or(FixedOffset::east_opt(0).unwrap()))
         .unwrap_or(FixedOffset::east_opt(0).unwrap());
 
-    for (i, entry) in report.hourly_forecast.iter().enumerate() {
+    for entry in report.hourly_forecast.iter().take(count) {
         let time_display = entry.time.with_timezone(&local_timezone).format("%H:%M").to_string();
-        let temperature_f = entry.temperature;
-        let condition_emoji = entry.weather_condition.emoji();
-        let precip_chance = entry.precipitation_chance
-            .filter(|&p| p > 0)
-            .map(|p| format!("☔{}%", p))
-            .unwrap_or_else(|| "".to_string());
         
-        let formatted_entry = format!("{} {}{}{}", time_display, temperature_f.round(), condition_emoji, precip_chance);
+        let pressure_display = entry.pressure.map(|p| format!("{:.1}", (p as f64) * 0.02953));
+        let wind_emoji = entry.wind_deg.map(get_wind_direction_emoji).unwrap_or("❓");
+        let wind_speed_knots = entry.wind_speed / 1.852;
+        let precip_display = entry.precipitation_chance.filter(|&p| p > 0).map(|p| format!(" ☔{}%", p)).unwrap_or_else(|| "".to_string());
+        let dew_point_display = entry.dew_point.map(|dp| format!(" 💧{:.0}F", dp)).unwrap_or_else(|| "".to_string());
 
-        if current_line.is_empty() {
-            current_line.push_str(&formatted_entry);
-        } else if (current_line.len() + 3 + formatted_entry.len()) <= 80 { // 3 for " | "
-            current_line.push_str(" | ");
-            current_line.push_str(&formatted_entry);
-        } else {
-            hourly_output_lines.push(current_line.clone());
-            current_line = formatted_entry;
-        }
-
-        if i == report.hourly_forecast.len() - 1 {
-            hourly_output_lines.push(current_line.clone());
-        }
+        let line = format!(
+            "{} 🌡️{:.0}F{} {} {}%{} {}{:.0}kts {}Hg",
+            time_display,
+            entry.temperature,
+            dew_point_display,
+            entry.weather_condition.emoji(),
+            entry.humidity.map(|h| h.to_string()).unwrap_or_else(|| "N/A".to_string()),
+            precip_display,
+            wind_emoji,
+            wind_speed_knots,
+            pressure_display.unwrap_or_else(|| "N/A".to_string())
+        );
+        hourly_output_lines.push(line);
     }
     hourly_output_lines
 }
@@ -146,9 +140,9 @@ fn build_default_current_weather_line(report: &WeatherReport) -> String {
     let country = report.country.as_deref().unwrap_or("N/A");
 
     let location_display = if state.is_empty() {
-        format!("{}, {}", city_name, country)
+        format!("📍{}, {}", city_name, country)
     } else {
-        format!("{}, {}, {}", city_name, state, country)
+        format!("📍{}, {}, {}", city_name, state, country)
     };
     
     let temperature_f = report.temperature.round();
@@ -192,7 +186,7 @@ fn build_default_current_weather_line(report: &WeatherReport) -> String {
         .unwrap_or_else(|| "".to_string());
 
     format!(
-        "📍{} 🌡️{temp:.0}F{} {hilo_display} {condition_emoji} {humidity}%{current_precip_display} {wind_emoji}{wind_speed:.0}kts {pressure_display}Hg 🌅{sunrise_time} 🌇{sunset_time}",
+        "{} 🌡️{temp:.0}F{} {hilo_display} {condition_emoji} {humidity}%{current_precip_display} {wind_emoji}{wind_speed:.0}kts {pressure_display}Hg 🌅{sunrise_time} 🌇{sunset_time}",
         location_display,
         dew_point_display,
         temp = temperature_f,
@@ -424,16 +418,15 @@ mod tests {
             taf: None,
         };
 
-        let formatted = format_weather_report(&report, true, false, None);
+        let formatted = format_weather_report(&report, false, None, Some(6), None);
         let lines: Vec<&str> = formatted.lines().collect();
 
         // Check expected content of the first line (current weather)
         assert!(lines[0].contains("📍Testville, TS, US 🌡️73F 💧59F  Hi:77F Lo:59F ☀️ 85% ☔30% ⬅️10kts 29.9Hg 🌅06:30 🌇17:45"));
 
         // Check expected content of daily forecast lines
-        assert!(lines[1].contains("Mon: Hi 77F Lo 59F ☁️ ☔30% | Tue: Hi 68F Lo 50F 🌧️ ☔80%"));
-        assert!(lines[2].contains("Wed: Hi 72F Lo 54F ☀️ ☔10% | Thu: Hi 41F Lo 28F ❄️ ☔90%"));
-        assert!(lines[3].contains("Fri: Hi 82F Lo 64F ⛈️ ☔70% | Sat: Hi 59F Lo 46F 🌫️ ☔20%"));
+        assert!(lines[1].contains("Daily Forecast:"));
+        assert!(lines[2].contains("Mon: Hi 77F Lo 59F ☁️ ☔30%"));
     }
 
     #[test]
@@ -465,7 +458,7 @@ mod tests {
             taf: None,
         };
 
-        let formatted = format_weather_report(&report, false, false, None); // Added None
+        let formatted = format_weather_report(&report, false, None, None, None); // Updated
         assert_eq!(formatted, "📍N/A, N/A 🌡️68F  Hi:N/A Lo:N/A ❓ N/A% ❓0kts N/AHg 🌅N/A 🌇N/A");
     }
 
@@ -503,33 +496,21 @@ mod tests {
                     precipitation_chance: Some(0),
                     wind_speed: 5.0,
                     wind_deg: Some(0),
-                },
-                HourlyForecastEntry {
-                    time: DateTime::from_timestamp(1672542000, 0).unwrap(), // Jan 1, 2023 03:00 UTC
-                    temperature: 45.0, // Fahrenheit
-                    weather_condition: WeatherCondition::Clouds,
-                    precipitation_chance: Some(10),
-                    wind_speed: 10.0,
-                    wind_deg: Some(90),
-                },
-                HourlyForecastEntry {
-                    time: DateTime::from_timestamp(1672552800, 0).unwrap(), // Jan 1, 2023 06:00 UTC
-                    temperature: 50.0, // Fahrenheit
-                    weather_condition: WeatherCondition::Rain,
-                    precipitation_chance: Some(70),
-                    wind_speed: 15.0,
-                    wind_deg: Some(270),
+                    dew_point: Some(35.0),
+                    feels_like: Some(38.0),
+                    humidity: Some(80),
+                    pressure: Some(1012),
                 },
             ],
             metar: None,
             taf: None,
         };
 
-        let formatted = format_weather_report(&report, false, true, None);
+        let formatted = format_weather_report(&report, false, Some(1), None, None);
         let lines: Vec<&str> = formatted.lines().collect();
 
         assert!(lines.len() >= 2);
         assert_eq!(lines[1], "Hourly Forecast:");
-        assert!(lines[2].contains("00:00 41☀️ | 03:00 45☁️☔10% | 06:00 50🌧️☔70%"));
+        assert!(lines[2].contains("00:00 🌡️41F 💧35F ☀️ 80% ⬆️3kts 29.9Hg"));
     }
 }

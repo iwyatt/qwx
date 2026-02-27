@@ -29,13 +29,14 @@ fn test_qwx_default_no_forecast_live_api() {
 #[test]
 fn test_qwx_with_forecast_live_api() {
     let mut cmd = Command::cargo_bin("qwx").unwrap();
-    cmd.arg("90210").arg("--taf");
+    cmd.arg("90210").arg("-f").arg("d").arg("7");
 
     let assert = cmd.assert().success();
     let output = String::from_utf8(assert.get_output().stdout.clone()).unwrap();
     
     // With forecast should have multiple lines
     assert!(output.lines().count() > 1);
+    assert!(output.contains("Daily Forecast:"));
 }
 
 #[test]

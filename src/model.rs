@@ -92,6 +92,10 @@ pub struct HourlyForecastEntry {
     pub precipitation_chance: Option<u8>,
     pub wind_speed: f64, // km/h
     pub wind_deg: Option<u16>, // degrees (0-360)
+    pub dew_point: Option<f64>,
+    pub feels_like: Option<f64>,
+    pub humidity: Option<u8>,
+    pub pressure: Option<u16>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

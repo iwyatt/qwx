@@ -60,13 +60,13 @@ This section shall display the following data points for the current conditions:
 *   Sunrise Time
 *   Sunset Time (separated from sunrise by an appropriate emoji)
 
-#### 4.2.2. Today's Hourly Forecast (Row 2) [Optional]
+#### 4.2.2. Hourly Forecast (Row 2+) [Optional]
 
-This section shall display an hourly forecast for the current day, showing the same data points as the Current Weather, in either 3-hour or 6-hour increments (to be determined during specification). This is only displayed if explicitly requested.
+This section shall display an hourly forecast for a specified number of intervals (defaulting to 12). **Each hour shall be presented on its own distinct row** and shall include the same full set of data points as the Current Weather (Temperature, Dew Point, Hi/Lo, Weather Condition, Wind, Humidity, etc.) to ensure a complete picture of the upcoming weather.
 
-#### 4.2.3. Next 6 Days Forecast (Row 3) [Optional]
+#### 4.2.3. Daily Forecast (Row 3+) [Optional]
 
-This section shall display a summary forecast for the next 6 days, with **each day presented on its own distinct row**. The format for each day shall include:
+This section shall display a summary forecast for a specified number of days (defaulting to 7). **Each day shall be presented on its own distinct row**. The format for each day shall include:
 *   Day of the Week (abbreviated)
 *   High Temperature (°F)
 *   Low Temperature (°F)

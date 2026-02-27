@@ -93,6 +93,10 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     opts.hourly.push("precipitation_probability".into());
     opts.hourly.push("wind_speed_10m".into());
     opts.hourly.push("wind_direction_10m".into());
+    opts.hourly.push("dew_point_2m".into());
+    opts.hourly.push("apparent_temperature".into());
+    opts.hourly.push("relative_humidity_2m".into());
+    opts.hourly.push("surface_pressure".into());
     opts.daily.push("sunrise".into());
     opts.daily.push("sunset".into());
     opts.daily.push("weather_code".into());
@@ -228,6 +232,20 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
                 .and_then(|val| val.value.as_f64())
                 .map(|v| v as u16);
 
+            let dew_point = hourly_values.get("dew_point_2m")
+                .and_then(|val| val.value.as_f64());
+
+            let feels_like = hourly_values.get("apparent_temperature")
+                .and_then(|val| val.value.as_f64());
+
+            let humidity = hourly_values.get("relative_humidity_2m")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u8);
+
+            let pressure = hourly_values.get("surface_pressure")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u16);
+
             hourly_entries.push(crate::model::HourlyForecastEntry {
                 time,
                 temperature,
@@ -235,6 +253,10 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
                 precipitation_chance,
                 wind_speed,
                 wind_deg,
+                dew_point,
+                feels_like,
+                humidity,
+                pressure,
             });
         }
         weather_report.hourly_forecast = hourly_entries;

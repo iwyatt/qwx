@@ -87,15 +87,20 @@ The application will be invoked as `qwx`.
 *   `<location>` (Required):
     *   **Zip Code:** 5 digits (e.g., `90210`).
     *   **Aviation ID:** 3-4 character alpha-numeric string (e.g., `KSEA`, `SEA`, `S60`).
-*   `-f`, `--forecast`, `-t`, `--taf`: Optional flag to enable the 6-day forecast or TAF output.
-*   `-H`, `--hourly`: Optional flag to enable the today's hourly forecast output.
+*   `-f`, `--forecast` [Sub-options]: Optional. Enables forecast output.
+    *   **For Zip Codes:** Requires sub-options:
+        *   `h [count]`: Hourly forecast for `count` intervals (default 12).
+        *   `d [count]`: Daily forecast for `count` intervals (default 7).
+    *   **For Aviation IDs:** Enables TAF output (ignores sub-options).
+*   `-t`, `--taf`: Shortcut for `--forecast` when using an aviation ID.
 
 **Example Usage:**
 *   `qwx 90210` (Standard current weather)
-*   `qwx 90210 -f` (Standard current weather + 6-day forecast)
+*   `qwx 90210 -f d 5` (Standard current weather + 5-day forecast)
+*   `qwx 90210 -f h 6` (Standard current weather + 6-hour forecast)
 *   `qwx KSEA` (METAR current weather)
-*   `qwx KSEA -t` (METAR + TAF)
 *   `qwx KSEA -f` (METAR + TAF)
+*   `qwx KSEA -t` (METAR + TAF)
 
 ## 5. Data Structures (within `model` module)
 
@@ -138,11 +143,12 @@ The `display` module will be responsible for orchestrating the output rows based
 *   **Row 1: Current Weather** (Always displayed)
     *   Format: `📍[Location] [Temp]°F ([DewPoint]°F) Hi:[High]°F Lo:[Low]°F [Cond_Emoji] [Humidity]% [Precip_Chance]% [Wind_Emoji][Speed]kts [Pressure]Hg  🌅 HH:MM 🌇 HH:MM`
     *   Example: `📍Jackson, US 39°F (34°F) Hi:39°F Lo:38°F ☀️ ↙️3kts 💧63% 30.03Hg  🌅07:35 🌇18:08`
-*   **Row 2: Today's Hourly Forecast** (Displayed if `--hourly` is set)
-    *   To be implemented with 3 or 6-hour increments. This will require checking how OpenWeatherMap provides hourly data and whether it aligns with the "same data points as Current Weather" requirement within the 80-character limit. If full details exceed the limit, a condensed format will be used (e.g., `HH:MM Temp°F Cond_Emoji`).
-    *   Example (condensed): `10:00 70°F ☀️ | 13:00 75°F ⛅ | 16:00 72°F 🌧️`
-*   **Row 3: Next 6 Days Forecast** (Displayed if `--forecast` is set)
-    *   Each day of the 6-day forecast will be presented on its own distinct row.
+*   **Row 2+: Hourly Forecast** (Displayed if `-f h` is set)
+    *   Each hourly interval is displayed on its own row.
+    *   Format: Same as Current Weather (Row 1), prefixed with the time.
+    *   Example: `10:00 🌡️70F 💧60F Hi:75F Lo:68F ☀️ ↙️5kts 💧65% 30.01Hg`
+*   **Row 3+: Daily Forecast** (Displayed if `-f d` is set)
+    *   Each day of the forecast will be presented on its own distinct row.
     *   Format per day: `Day_of_Week Hi°F Lo°F Cond_Emoji Precip_Chance%`
     *   Example: `Mon 75°F 60°F ☀️ 10%`
     *   Each daily forecast row shall strive to adhere to the 80-character limit.
