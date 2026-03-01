@@ -144,6 +144,7 @@ The `display` module will be responsible for orchestrating the output rows based
     *   Format: `📍[Location] [Temp]°F ([DewPoint]°F) Hi:[High]°F Lo:[Low]°F [Cond_Emoji] [Humidity]% [Precip_Chance]% [Wind_Emoji][Speed]kts [Pressure]Hg  🌅 HH:MM 🌇 HH:MM`
     *   Example: `📍Jackson, US 39°F (34°F) Hi:39°F Lo:38°F ☀️ ↙️3kts 💧63% 30.03Hg  🌅07:35 🌇18:08`
 *   **Row 2+: Hourly Forecast** (Displayed if `-f h` is set)
+    *   **Filtering:** The `display` module filters the hourly forecast to only include entries whose time is strictly later than the report's current `datetime`.
     *   Each hourly interval is displayed on its own row.
     *   Format: Same as Current Weather (Row 1), prefixed with the time.
     *   Example: `10:00 🌡️70F 💧60F Hi:75F Lo:68F ☀️ ↙️5kts 💧65% 30.01Hg`

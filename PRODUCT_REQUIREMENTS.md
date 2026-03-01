@@ -62,7 +62,7 @@ This section shall display the following data points for the current conditions:
 
 #### 4.2.2. Hourly Forecast (Row 2+) [Optional]
 
-This section shall display an hourly forecast for a specified number of intervals (defaulting to 12). **Each hour shall be presented on its own distinct row** and shall include the same full set of data points as the Current Weather (Temperature, Dew Point, Hi/Lo, Weather Condition, Wind, Humidity, etc.) to ensure a complete picture of the upcoming weather.
+This section shall display an hourly forecast for a specified number of intervals (defaulting to 12). **The hourly forecast shall begin from the first available interval strictly after the current weather time.** **Each hour shall be presented on its own distinct row** and shall include the same full set of data points as the Current Weather (Temperature, Dew Point, Hi/Lo, Weather Condition, Wind, Humidity, etc.) to ensure a complete picture of the upcoming weather.
 
 #### 4.2.3. Daily Forecast (Row 3+) [Optional]
 

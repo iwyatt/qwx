@@ -42,3 +42,9 @@
   - [x] Update display logic: one interval per row for both hourly and daily.
   - [x] Expand hourly forecast to show full weather details.
   - [x] Update documentation (PRD, Spec) and tests.
+- [ ] **Bug Fix: Hourly Forecast Timezone Mismatch**
+  - [x] Investigate why hourly forecast starts at 4pm when it's 10am Pacific.
+  - [x] Ensure hourly forecast begins at the next available hour relative to the user's local time.
+  - [x] Update `PRODUCT_REQUIREMENTS.md`, `SPECIFICATION.md`, and `todo.md` as needed.
+  - [x] Modify `src/display.rs` to filter hourly forecast entries.
+  - [x] Verify changes with `cargo check` and tests.
