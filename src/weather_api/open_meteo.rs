@@ -17,8 +17,26 @@ pub struct OpenMeteoWeatherResponse {
 
 // --- Open-Meteo Client ---
 
+fn map_state_abbreviation(abbrev: &str) -> &str {
+    match abbrev.to_uppercase().as_str() {
+        "AL" => "Alabama", "AK" => "Alaska", "AZ" => "Arizona", "AR" => "Arkansas", "CA" => "California",
+        "CO" => "Colorado", "CT" => "Connecticut", "DE" => "Delaware", "FL" => "Florida", "GA" => "Georgia",
+        "HI" => "Hawaii", "ID" => "Idaho", "IL" => "Illinois", "IN" => "Indiana", "IA" => "Iowa",
+        "KS" => "Kansas", "KY" => "Kentucky", "LA" => "Louisiana", "ME" => "Maine", "MD" => "Maryland",
+        "MA" => "Massachusetts", "MI" => "Michigan", "MN" => "Minnesota", "MS" => "Mississippi", "MO" => "Missouri",
+        "MT" => "Montana", "NE" => "Nebraska", "NV" => "Nevada", "NH" => "New Hampshire", "NJ" => "New Jersey",
+        "NM" => "New Mexico", "NY" => "New York", "NC" => "North Carolina", "ND" => "North Dakota", "OH" => "Ohio",
+        "OK" => "Oklahoma", "OR" => "Oregon", "PA" => "Pennsylvania", "RI" => "Rhode Island", "SC" => "South Carolina",
+        "SD" => "South Dakota", "TN" => "Tennessee", "TX" => "Texas", "UT" => "Utah", "VT" => "Vermont",
+        "VA" => "Virginia", "WA" => "Washington", "WV" => "West Virginia", "WI" => "Wisconsin", "WY" => "Wyoming",
+        _ => abbrev,
+    }
+}
+
 pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherReport> {
     let client = open_meteo_rs::Client::new();
+    
+    // Try primary search first
     let geocoding_opts = geocoding::Options {
         name: Some(String::from(search_term)),
         count: Some(1),
@@ -26,10 +44,44 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         language: None,
     };
 
-    let geocoding_response = client.geocoding(geocoding_opts)
+    let mut geocoding_response = client.geocoding(geocoding_opts)
         .await
-        .map_err(|e| anyhow!("Open-Meteo geocoding API error: {}", e))?; // Convert error to anyhow
+        .map_err(|e| anyhow!("Open-Meteo geocoding API error: {}", e))?;
 
+    // Fallback logic for "City, ST" or "City, State"
+    if geocoding_response.results.is_none() || geocoding_response.results.as_ref().unwrap().is_empty() {
+        if let Some((city, state_part)) = search_term.split_once(',') {
+            let city = city.trim();
+            let state_part = state_part.trim();
+            let full_state_name = map_state_abbreviation(state_part);
+
+            let fallback_opts = geocoding::Options {
+                name: Some(String::from(city)),
+                count: Some(10), // Get more results to filter
+                apikey: None,
+                language: None,
+            };
+
+            let fallback_response = client.geocoding(fallback_opts)
+                .await
+                .map_err(|e| anyhow!("Open-Meteo geocoding API error (fallback): {}", e))?;
+
+            if let Some(results) = fallback_response.results {
+                let filtered_results: Vec<_> = results.into_iter().filter(|loc| {
+                    if let Some(loc_state) = &loc.admin1 {
+                        loc_state.to_lowercase() == full_state_name.to_lowercase() ||
+                        loc_state.to_lowercase() == state_part.to_lowercase()
+                    } else {
+                        false
+                    }
+                }).collect();
+
+                if !filtered_results.is_empty() {
+                    geocoding_response.results = Some(filtered_results);
+                }
+            }
+        }
+    }
 
     let first_location = geocoding_response.results
         .and_then(|mut results| results.drain(..).next()) // Take the first result, consuming the vector

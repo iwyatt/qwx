@@ -52,3 +52,15 @@ fn test_qwx_with_forecast_alias_live_api() {
     assert!(output.contains("Forecast (TAF):"));
     assert!(output.lines().count() > 1);
 }
+
+#[test]
+fn test_qwx_city_state_abbreviation_live_api() {
+    let mut cmd = Command::cargo_bin("qwx").unwrap();
+    cmd.arg("Maple Valley, WA");
+
+    let assert = cmd.assert().success();
+    let output = String::from_utf8(assert.get_output().stdout.clone()).unwrap();
+    
+    assert!(output.contains("Maple Valley"));
+    assert!(output.contains("Washington"));
+}
