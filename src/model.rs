@@ -67,7 +67,16 @@ pub struct DailyForecastEntry {
     pub weather_condition: WeatherCondition,
     pub temp_max: f64,
     pub temp_min: f64,
+    pub apparent_temperature_max: Option<f64>,
+    pub apparent_temperature_min: Option<f64>,
     pub precipitation_chance: Option<u8>,
+    pub wind_speed: Option<f64>, // km/h (standardized for display)
+    pub wind_deg: Option<u16>, // degrees (0-360)
+    pub sunrise: Option<DateTime<Utc>>,
+    pub sunset: Option<DateTime<Utc>>,
+    pub humidity: Option<u8>,
+    pub pressure: Option<u16>,
+    pub dew_point: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

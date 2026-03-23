@@ -89,8 +89,35 @@ pub fn format_weather_report(
                     .map(|entry| {
                         let day_name = entry.date.format("%a").to_string(); // Abbreviated day name
                         let condition_emoji = entry.weather_condition.emoji();
-                        let precip_chance = entry.precipitation_chance.map(|p| format!("☔{}%", p)).unwrap_or_else(|| "".to_string());
-                        format!("{}: Hi {:.0}F Lo {:.0}F {} {}", day_name, entry.temp_max, entry.temp_min, condition_emoji, precip_chance)
+                        
+                        let temp_display = format!("🌡️Hi:{:.0}F Lo:{:.0}F", entry.temp_max, entry.temp_min);
+                        let dew_point_display = entry.dew_point.map(|dp| format!(" 💧{:.0}F", dp)).unwrap_or_else(|| "".to_string());
+                        let humidity_val = entry.humidity.map(|h| format!(" {}%", h)).unwrap_or_else(|| " N/A%".to_string());
+                        let precip_display = entry.precipitation_chance.map(|p| format!(" ☔{}%", p)).unwrap_or_else(|| "".to_string());
+                        
+                        let wind_emoji = entry.wind_deg.map(get_wind_direction_emoji).unwrap_or("❓");
+                        let wind_speed_knots = entry.wind_speed.map(|s| s / 1.852).unwrap_or(0.0);
+                        let wind_display = format!(" {}{:.0}kts", wind_emoji, wind_speed_knots);
+
+                        let pressure_display = entry.pressure.map(|p| format!(" {:.1}Hg", (p as f64) * 0.02953)).unwrap_or_else(|| " N/AHg".to_string());
+
+                        let local_timezone = report.timezone_offset.map(|offset| FixedOffset::east_opt(offset).unwrap_or(FixedOffset::east_opt(0).unwrap()))
+                            .unwrap_or(FixedOffset::east_opt(0).unwrap());
+                        let sunrise_display = entry.sunrise.map(|dt| format!(" 🌅{}", dt.with_timezone(&local_timezone).format("%H:%M"))).unwrap_or_else(|| " 🌅N/A".to_string());
+                        let sunset_display = entry.sunset.map(|dt| format!(" 🌇{}", dt.with_timezone(&local_timezone).format("%H:%M"))).unwrap_or_else(|| " 🌇N/A".to_string());
+
+                        format!("{}: {}{} {}{}{} {}{}{}{}", 
+                            day_name, 
+                            temp_display, 
+                            dew_point_display,
+                            condition_emoji, 
+                            humidity_val, 
+                            precip_display, 
+                            wind_display, 
+                            pressure_display, 
+                            sunrise_display, 
+                            sunset_display
+                        )
                     })
                     .collect::<Vec<String>>();
                 
@@ -380,42 +407,96 @@ mod tests {
                     weather_condition: WeatherCondition::Clouds,
                     temp_max: 77.0,
                     temp_min: 59.0,
+                    apparent_temperature_max: Some(75.0),
+                    apparent_temperature_min: Some(57.0),
                     precipitation_chance: Some(30),
+                    wind_speed: Some(18.52),
+                    wind_deg: Some(270),
+                    sunrise: Some(Utc.with_ymd_and_hms(2023, 1, 2, 6, 31, 0).unwrap()),
+                    sunset: Some(Utc.with_ymd_and_hms(2023, 1, 2, 17, 46, 0).unwrap()),
+                    humidity: Some(80),
+                    pressure: Some(1013),
+                    dew_point: Some(58.0),
                 },
                 DailyForecastEntry {
                     date: Utc.with_ymd_and_hms(2023, 1, 3, 0, 0, 0).unwrap().date_naive(),
                     weather_condition: WeatherCondition::Rain,
                     temp_max: 68.0,
                     temp_min: 50.0,
+                    apparent_temperature_max: Some(66.0),
+                    apparent_temperature_min: Some(48.0),
                     precipitation_chance: Some(80),
+                    wind_speed: Some(25.0),
+                    wind_deg: Some(180),
+                    sunrise: Some(Utc.with_ymd_and_hms(2023, 1, 3, 6, 32, 0).unwrap()),
+                    sunset: Some(Utc.with_ymd_and_hms(2023, 1, 3, 17, 47, 0).unwrap()),
+                    humidity: Some(90),
+                    pressure: Some(1010),
+                    dew_point: Some(60.0),
                 },
                  DailyForecastEntry {
                     date: Utc.with_ymd_and_hms(2023, 1, 4, 0, 0, 0).unwrap().date_naive(),
                     weather_condition: WeatherCondition::Clear,
                     temp_max: 72.0,
                     temp_min: 54.0,
+                    apparent_temperature_max: Some(70.0),
+                    apparent_temperature_min: Some(52.0),
                     precipitation_chance: Some(10),
+                    wind_speed: Some(10.0),
+                    wind_deg: Some(0),
+                    sunrise: Some(Utc.with_ymd_and_hms(2023, 1, 4, 6, 33, 0).unwrap()),
+                    sunset: Some(Utc.with_ymd_and_hms(2023, 1, 4, 17, 48, 0).unwrap()),
+                    humidity: Some(60),
+                    pressure: Some(1015),
+                    dew_point: Some(50.0),
                 },
                 DailyForecastEntry {
                     date: Utc.with_ymd_and_hms(2023, 1, 5, 0, 0, 0).unwrap().date_naive(),
                     weather_condition: WeatherCondition::Snow,
                     temp_max: 41.0,
                     temp_min: 28.0,
+                    apparent_temperature_max: Some(35.0),
+                    apparent_temperature_min: Some(22.0),
                     precipitation_chance: Some(90),
+                    wind_speed: Some(30.0),
+                    wind_deg: Some(45),
+                    sunrise: Some(Utc.with_ymd_and_hms(2023, 1, 5, 6, 34, 0).unwrap()),
+                    sunset: Some(Utc.with_ymd_and_hms(2023, 1, 5, 17, 49, 0).unwrap()),
+                    humidity: Some(85),
+                    pressure: Some(1005),
+                    dew_point: Some(25.0),
                 },
                 DailyForecastEntry {
                     date: Utc.with_ymd_and_hms(2023, 1, 6, 0, 0, 0).unwrap().date_naive(),
                     weather_condition: WeatherCondition::Thunderstorm,
                     temp_max: 82.0,
                     temp_min: 64.0,
+                    apparent_temperature_max: Some(85.0),
+                    apparent_temperature_min: Some(67.0),
                     precipitation_chance: Some(70),
+                    wind_speed: Some(40.0),
+                    wind_deg: Some(225),
+                    sunrise: Some(Utc.with_ymd_and_hms(2023, 1, 6, 6, 35, 0).unwrap()),
+                    sunset: Some(Utc.with_ymd_and_hms(2023, 1, 6, 17, 50, 0).unwrap()),
+                    humidity: Some(75),
+                    pressure: Some(1008),
+                    dew_point: Some(70.0),
                 },
                 DailyForecastEntry {
                     date: Utc.with_ymd_and_hms(2023, 1, 7, 0, 0, 0).unwrap().date_naive(),
                     weather_condition: WeatherCondition::Mist,
                     temp_max: 59.0,
                     temp_min: 46.0,
+                    apparent_temperature_max: Some(57.0),
+                    apparent_temperature_min: Some(44.0),
                     precipitation_chance: Some(20),
+                    wind_speed: Some(15.0),
+                    wind_deg: Some(315),
+                    sunrise: Some(Utc.with_ymd_and_hms(2023, 1, 7, 6, 36, 0).unwrap()),
+                    sunset: Some(Utc.with_ymd_and_hms(2023, 1, 7, 17, 51, 0).unwrap()),
+                    humidity: Some(95),
+                    pressure: Some(1012),
+                    dew_point: Some(55.0),
                 },
             ],
             hourly_forecast: Vec::new(),
@@ -431,7 +512,7 @@ mod tests {
 
         // Check expected content of daily forecast lines
         assert!(lines[1].contains("Daily Forecast:"));
-        assert!(lines[2].contains("Mon: Hi 77F Lo 59F ☁️ ☔30%"));
+        assert!(lines[2].contains("Mon: 🌡️Hi:77F Lo:59F 💧58F ☁️ 80% ☔30%  ⬅️10kts 29.9Hg 🌅06:31 🌇17:46"));
     }
 
     #[test]

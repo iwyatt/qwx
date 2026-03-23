@@ -42,6 +42,12 @@
   - [x] Update display logic: one interval per row for both hourly and daily.
   - [x] Expand hourly forecast to show full weather details.
   - [x] Update documentation (PRD, Spec) and tests.
+- [x] **Feature Request: Enhanced Daily Forecast**
+  - [x] Update `model::DailyForecastEntry` with more data points (dew point, humidity, wind, pressure, sunrise/sunset).
+  - [x] Update `open_meteo.rs` to fetch and map enhanced daily data.
+  - [x] Update `display.rs` to format daily forecast matching current/hourly styles.
+  - [x] Verify character limits and formatting.
+  - [x] Increment minor version in `Cargo.toml`.
 - [x] **Bug Fix: Hourly Forecast Timezone Mismatch**
   - [x] Investigate why hourly forecast starts at 4pm when it's 10am Pacific.
   - [x] Ensure hourly forecast begins at the next available hour relative to the user's local time.

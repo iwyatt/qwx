@@ -154,8 +154,15 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     opts.daily.push("weather_code".into());
     opts.daily.push("temperature_2m_max".into());
     opts.daily.push("temperature_2m_min".into());
+    opts.daily.push("apparent_temperature_max".into());
+    opts.daily.push("apparent_temperature_min".into());
     opts.daily.push("precipitation_sum".into());
     opts.daily.push("precipitation_probability_max".into());
+    opts.daily.push("wind_speed_10m_max".into());
+    opts.daily.push("wind_direction_10m_dominant".into());
+    opts.daily.push("relative_humidity_2m_mean".into());
+    opts.daily.push("surface_pressure_mean".into());
+    opts.daily.push("dew_point_2m_mean".into());
     opts.forecast_days = Some(7);
 
     let forecast_response = client.forecast(opts)
@@ -331,28 +338,44 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
             let temp_min = daily_values.get("temperature_2m_min")
                 .and_then(|val| val.value.as_f64());
 
+            let apparent_temperature_max = daily_values.get("apparent_temperature_max")
+                .and_then(|val| val.value.as_f64());
+            let apparent_temperature_min = daily_values.get("apparent_temperature_min")
+                .and_then(|val| val.value.as_f64());
+
             let precipitation_chance = daily_values.get("precipitation_probability_max")
                 .and_then(|val| val.value.as_f64())
                 .map(|v| v as u8);
             
-            // For sunrise/sunset, only take the first day's values if available
+            let wind_speed = daily_values.get("wind_speed_10m_max")
+                .and_then(|val| val.value.as_f64());
+            let wind_deg = daily_values.get("wind_direction_10m_dominant")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u16);
+            
+            let humidity = daily_values.get("relative_humidity_2m_mean")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u8);
+            let pressure = daily_values.get("surface_pressure_mean")
+                .and_then(|val| val.value.as_f64())
+                .map(|v| v as u16);
+            let dew_point = daily_values.get("dew_point_2m_mean")
+                .and_then(|val| val.value.as_f64());
+
+            let sunrise_val = daily_values.get("sunrise")
+                .and_then(|item| item.value.as_i64());
+            let sunrise = sunrise_val.and_then(|sr_ts| Utc.timestamp_opt(sr_ts, 0).single());
+
+            let sunset_val = daily_values.get("sunset")
+                .and_then(|item| item.value.as_i64());
+            let sunset = sunset_val.and_then(|ss_ts| Utc.timestamp_opt(ss_ts, 0).single());
+
+            // For report's main sunrise/sunset, only take the first day's values if available
             if weather_report.sunrise.is_none() {
-                let sunrise_val = daily_values.get("sunrise")
-                    .and_then(|item| item.value.as_i64());
-                if let Some(sr_ts) = sunrise_val {
-                    if let Some(sunrise_dt) = Utc.timestamp_opt(sr_ts, 0).single() {
-                        weather_report.sunrise = Some(sunrise_dt);
-                    }
-                }
+                weather_report.sunrise = sunrise;
             }
             if weather_report.sunset.is_none() {
-                let sunset_val = daily_values.get("sunset")
-                    .and_then(|item| item.value.as_i64());
-                if let Some(ss_ts) = sunset_val {
-                    if let Some(sunset_dt) = Utc.timestamp_opt(ss_ts, 0).single() {
-                        weather_report.sunset = Some(sunset_dt);
-                    }
-                }
+                weather_report.sunset = sunset;
             }
 
             if let (Some(temp_max), Some(temp_min)) = (temp_max, temp_min) {
@@ -361,7 +384,16 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
                     weather_condition,
                     temp_max,
                     temp_min,
+                    apparent_temperature_max,
+                    apparent_temperature_min,
                     precipitation_chance,
+                    wind_speed,
+                    wind_deg,
+                    sunrise,
+                    sunset,
+                    humidity,
+                    pressure,
+                    dew_point,
                 });
             }
         }
