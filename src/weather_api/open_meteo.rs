@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow};
+// Weather data by Open-Meteo.com (https://open-meteo.com/)
 use open_meteo_rs::{geocoding, forecast}; // Import forecast module for Options
 use open_meteo_rs::forecast::ForecastResult; // Only import ForecastResult and ForecastResultHourly
 use serde::{Deserialize, Serialize};

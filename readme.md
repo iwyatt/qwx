@@ -69,6 +69,10 @@ qwx KSEA -t
 default_location = "90210"
 ```
 
+## Attribution
+
+Weather data by [Open-Meteo.com](https://open-meteo.com/).
+
 ## Disclosure
 
 This project was co-written with  Google Gemini, showcasing the capabilities of AI-driven software development assistance in building comprehensive, performant CLI tools.
