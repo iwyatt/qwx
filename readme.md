@@ -75,4 +75,4 @@ This project was co-written with  Google Gemini, showcasing the capabilities of 
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE.MD).
+This project is licensed under the [MIT License](license.md).
