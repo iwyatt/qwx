@@ -2,7 +2,7 @@
 
 `qwx` is a high-performance, minimal, and emoji-rich weather CLI application written in Rust. It's designed to provide you with the most critical weather information at a glance, directly in your terminal, with a strong emphasis on brevity and UTF-8 visuals.
 
-Example:
+Examples:
 ```
 > qwx seattle -f h 3
 
@@ -13,6 +13,28 @@ Hourly Forecast:
 01:00 🌡️41F 💧34F ☁️ 76% ☔8% ↘️1kts 29.7Hg
 ```
 
+```
+> qwx KSEA
+
+📍KSEA (METAR) SPECI KSEA 241719Z 31007KT 1SM R16L/5500VP6000FT -RA BR BKN003
+    OVC011 07/06 A2977 RMK AO2 BKN003 V SCT P0005 T00670061 $
+```
+
+```
+> qwx KSEA -f
+
+📍KSEA (METAR) SPECI KSEA 241719Z 31007KT 1SM R16L/5500VP6000FT -RA BR BKN003
+    OVC011 07/06 A2977 RMK AO2 BKN003 V SCT P0005 T00670061 $
+Forecast (TAF):
+TAF KSEA 241458Z 2415/2518 00000KT 2SM -RA BR OVC030
+FM241600 15008KT 4SM -RA BR OVC025
+FM241800 17010KT 6SM -RA BR OVC020
+FM242200 19016G30KT 6SM -RA BR OVC020
+FM250300 20015G25KT P6SM VCSH BKN035
+FM250900 19012G18KT P6SM VCSH BKN040
+FM251200 20010KT P6SM VCSH BKN040
+
+```
 ## Features
 
 -   **Brevity by Design:** Get current conditions and forecasts in a single, well-formatted line of text.
