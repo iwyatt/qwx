@@ -58,3 +58,8 @@
   - [x] Implement fallback logic for "City, State" search in `open_meteo.rs`.
   - [x] Add mapping for state abbreviations to full state names.
   - [x] Add test case for city and state search in `cli_tests.rs`.
+- [x] **Safety Requirement: Aviation Weather Disclaimer**
+  - [x] Add disclaimer to `src/display.rs` for aviation weather output.
+  - [x] Add "Disclaimer" section to `readme.md`.
+  - [x] Update `PRODUCT_REQUIREMENTS.md` and `SPECIFICATION.md` with the safety disclaimer requirement.
+  - [x] Add/Update tests in `tests/cli_tests.rs` to verify the disclaimer presence.

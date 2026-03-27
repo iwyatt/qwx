@@ -66,6 +66,7 @@ pub fn format_weather_report(
                 output.push("No TAF available for this station.".to_string());
             }
         }
+        output.push("⚠️ NOT FOR FLIGHT PLANNING. Use aviationweather.gov for official briefings.".to_string());
     } else {
         // Standard Mode - Current Weather Line
         let default_current_weather_line = build_default_current_weather_line(report);

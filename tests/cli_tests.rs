@@ -51,6 +51,19 @@ fn test_qwx_with_forecast_alias_live_api() {
     assert!(output.contains("(METAR)"));
     assert!(output.contains("Forecast (TAF):"));
     assert!(output.lines().count() > 1);
+    assert!(output.contains("NOT FOR FLIGHT PLANNING"));
+}
+
+#[test]
+fn test_qwx_aviation_disclaimer_live_api() {
+    let mut cmd = Command::cargo_bin("qwx").unwrap();
+    cmd.arg("KSEA");
+
+    let assert = cmd.assert().success();
+    let output = String::from_utf8(assert.get_output().stdout.clone()).unwrap();
+    
+    assert!(output.contains("(METAR)"));
+    assert!(output.contains("NOT FOR FLIGHT PLANNING"));
 }
 
 #[test]

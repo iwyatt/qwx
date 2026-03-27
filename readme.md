@@ -95,6 +95,10 @@ default_location = "90210"
 
 Weather data by [Open-Meteo.com](https://open-meteo.com/).
 
+## Disclaimer
+
+**NOT FOR FLIGHT PLANNING.** `qwx` is not an official aviation weather product. Always consult [aviationweather.gov](https://aviationweather.gov/) for official briefings and operational data.
+
 ## Disclosure
 
 This project was co-written with  Google Gemini, showcasing the capabilities of AI-driven software development assistance in building comprehensive, performant CLI tools.

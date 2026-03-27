@@ -161,6 +161,7 @@ The `display` module will be responsible for orchestrating the output rows based
     2.  Ensure chunks are split at space characters to avoid breaking words or codes.
     3.  Indent subsequent chunks by 4 spaces to visually group them with the parent row.
     4.  **Crucial:** Do not omit any tokens from the raw input (e.g., RMK section of METAR).
+    5.  **Disclaimer:** All aviation output MUST conclude with the disclaimer: "⚠️ NOT FOR FLIGHT PLANNING. Use aviationweather.gov for official briefings."
 
 ### 7.2. Emoji Mapping
 
