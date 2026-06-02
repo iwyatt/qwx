@@ -1,5 +1,7 @@
 # GEMINI.MD - Gemini CLI Directives for `qwx` Project
 
+IMPORTANT: DO NOT `git commit` AND DO NOT `git merge`
+
 This document outlines the directives provided by the user for the `qwx` project and instructions for the Gemini CLI agent to ensure continuity and adherence to project goals.
 
 ## User Directives
@@ -10,13 +12,10 @@ This document outlines the directives provided by the user for the `qwx` project
 *   **Efficiency:** Be exceptionally efficient with API calls and token usage (Gemini CLI resources are expensive and limited).
 *   **Documentation First:** Prioritize creating supporting documentation (PRD, Spec, `GEMINI.MD`) before writing any code.
 *   **Use the `cargo doc` feature to generate and view documentation that will help you with a task. Include links to appropriate documentation in task notes when creating tasks.
-*   **When beginning a new task, create a git branch to work from. Only merge the branch into main when it passes `cargo check` and work on the task is complete.
 *   **Make sure that context and token usage is carefully managed such that it is appropriate for usage with Google Gemini's `gemini-2.5-flash-lite` which has fairly tight constraints.
 *   **Task Management:** Completed tasks MUST be checked off in `todo.md`. Failure to check completed tasks has caused duplicated work.
 
 ## Gemini CLI Agent Instructions
-
-### Current Task: Implementation Phase
 
 The initial documentation generation for `PRODUCT_REQUIREMENTS.md` and `SPECIFICATION.md` is complete. The focus is now on implementing the features outlined in these documents.
 

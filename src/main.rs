@@ -1,9 +1,9 @@
 mod config;
+mod display;
 mod model;
 mod weather_api;
-mod display;
 
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use crate::config::Config;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Duration;
@@ -17,10 +17,6 @@ struct Cli {
     /// If not provided, it will try to use `default_location` or `last_location` from the config.
     location: Option<String>,
 
-    /// The weather API provider to use.
-    #[arg(short, long, value_enum, default_value_t = ApiProvider::OpenMeteo)]
-    api_provider: ApiProvider,
-
     /// Display the forecast (hourly or daily) or TAF.
     /// For zip codes: -f h [count] or -f d [count].
     /// For aviation: -f or -t.
@@ -30,14 +26,6 @@ struct Cli {
     /// Shortcut for TAF (aviation only).
     #[arg(short = 't', long = "taf")]
     taf: bool,
-}
-
-#[derive(Debug, Clone, ValueEnum)]
-enum ApiProvider {
-    /// Use OpenWeatherMap API
-    OpenWeatherMap,
-    /// Use Open-Meteo API
-    OpenMeteo,
 }
 
 #[tokio::main]
@@ -78,11 +66,6 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     }
 
-    let provider = match cli.api_provider {
-        ApiProvider::OpenWeatherMap => weather_api::WeatherApiProvider::OpenWeatherMap,
-        ApiProvider::OpenMeteo => weather_api::WeatherApiProvider::OpenMeteo,
-    };
-
     let weather_spinner = ProgressBar::new_spinner();
     weather_spinner.set_style(ProgressStyle::default_spinner()
         .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
@@ -90,7 +73,7 @@ async fn main() -> Result<(), anyhow::Error> {
     weather_spinner.set_message("Fetching weather data...");
     weather_spinner.enable_steady_tick(Duration::from_millis(100));
 
-    let weather_report = weather_api::get_weather(&location_str, provider).await?;
+    let weather_report = weather_api::get_weather(&location_str, weather_api::WeatherApiProvider::OpenMeteo).await?;
     
     weather_spinner.finish_and_clear();
     

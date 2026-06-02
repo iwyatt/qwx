@@ -9,7 +9,6 @@ use serde_json::Value;
 
 /// Enum to select the weather API provider.
 pub enum WeatherApiProvider {
-    OpenWeatherMap,
     OpenMeteo,
     NoaaAwc,
 }
@@ -83,9 +82,6 @@ pub async fn get_weather(
     loop {
         attempts += 1;
         let result = match actual_provider {
-            WeatherApiProvider::OpenWeatherMap => {
-                Err(WeatherApiError::ApiError("OpenWeatherMap API is currently not implemented.".to_string()))
-            },
             WeatherApiProvider::OpenMeteo => {
                 open_meteo::get_current_weather_report(location).await.map_err(Into::into)
             },
