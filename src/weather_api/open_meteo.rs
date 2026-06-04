@@ -4,7 +4,7 @@ use open_meteo_rs::{geocoding, forecast}; // Import forecast module for Options
 use open_meteo_rs::forecast::ForecastResult; // Only import ForecastResult and ForecastResultHourly
 use serde::{Deserialize, Serialize};
 use crate::model::{WeatherCondition, WeatherReport};
-use chrono::{Utc, TimeZone, Offset};
+use chrono::{Utc, TimeZone, Offset, FixedOffset};
 use chrono_tz::Tz;
 
 // --- Open-Meteo API Models (simplified for mapping to existing model.rs) ---
@@ -109,15 +109,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     let state = admin1_cloned;
     
     
-    // Extract timezone from geocoding response
-    let timezone_offset_seconds = if let Some(tz_str) = first_location.timezone {
-        tz_str.parse::<Tz>()
-            .ok()
-            .map(|tz| tz.offset_from_utc_datetime(&Utc::now().naive_utc()).fix().local_minus_utc())
-    } else {
-        None
-    };
-
+    let first_location_timezone = first_location.timezone.clone();
 
     // Now fetch the weather forecast using the obtained lat and lng
     let mut opts = forecast::Options::default(); // Use forecast::Options
@@ -128,6 +120,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     opts.temperature_unit = Some(open_meteo_rs::forecast::TemperatureUnit::Fahrenheit);
     opts.wind_speed_unit = Some(open_meteo_rs::forecast::WindSpeedUnit::Kn);
     opts.precipitation_unit = Some(open_meteo_rs::forecast::PrecipitationUnit::Inches);
+    opts.time_zone = first_location_timezone.clone();
 
 
 
@@ -175,11 +168,14 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         forecast_data: forecast_response,
     };
 
+    let local_tz = first_location_timezone.and_then(|s| s.parse::<Tz>().ok()).unwrap_or(chrono_tz::UTC);
 
     let current_weather_data = om_response.forecast_data.current
         .ok_or_else(|| anyhow!("No current weather data found in Open-Meteo response"))?;
 
-    let datetime = current_weather_data.datetime.and_utc(); // Convert NaiveDateTime to DateTime<Utc>
+    let datetime = local_tz.from_local_datetime(&current_weather_data.datetime).earliest()
+        .ok_or_else(|| anyhow!("Failed to convert current weather time to UTC"))?
+        .with_timezone(&Utc);
 
     let weather_code_val = current_weather_data.values.get("weather_code")
         .ok_or_else(|| anyhow!("Failed to get weather_code from values"))?;
@@ -221,6 +217,8 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         .and_then(|val| val.value.as_f64())
         .map(|v| v as u8);
 
+    let timezone_offset = local_tz.offset_from_utc_datetime(&datetime.naive_utc()).fix().local_minus_utc();
+
     let mut weather_report = WeatherReport {
         city_name: Some(location_name),
         country: Some(country_code),
@@ -238,7 +236,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         sunset: None, // Open-Meteo provides daily sunrise/sunset, not in current_weather, handle separately if needed
         weather_condition,
         datetime,
-        timezone_offset: timezone_offset_seconds, // Now derived from geocoding_response
+        timezone_offset: Some(timezone_offset), // Now derived from geocoding_response and datetime
         latitude: lat,
         longitude: lng,
         daily_forecast: Vec::new(),
@@ -248,27 +246,14 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
         state,
     };
 
-    // Manually calculate min/max temperature from hourly data if available
-    if let Some(hourly_data) = &om_response.forecast_data.hourly {
-        let temps: Vec<f64> = hourly_data.into_iter()
-            .filter_map(|item| {
-                item.values.get("temperature_2m")
-                    .and_then(|val| val.value.as_f64())
-            })
-            .collect();
-
-        if !temps.is_empty() {
-            weather_report.temp_min = Some(temps.iter().copied().fold(f64::INFINITY, f64::min));
-            weather_report.temp_max = Some(temps.iter().copied().fold(f64::NEG_INFINITY, f64::max));
-        }
-    }
-
     if let Some(hourly_data_entries) = om_response.forecast_data.hourly {
         let mut hourly_entries = Vec::new();
         for hourly_item in hourly_data_entries.into_iter() {
             let hourly_values = &hourly_item.values;
 
-            let time = hourly_item.datetime.and_utc();
+            let time = local_tz.from_local_datetime(&hourly_item.datetime).earliest()
+                .ok_or_else(|| anyhow!("Failed to convert hourly time to UTC"))?
+                .with_timezone(&Utc);
 
             let temperature = hourly_values.get("temperature_2m")
                 .and_then(|val| val.value.as_f64())
@@ -363,20 +348,46 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
             let dew_point = daily_values.get("dew_point_2m_mean")
                 .and_then(|val| val.value.as_f64());
 
-            let sunrise_val = daily_values.get("sunrise")
-                .and_then(|item| item.value.as_i64());
-            let sunrise = sunrise_val.and_then(|sr_ts| Utc.timestamp_opt(sr_ts, 0).single());
+            let sunrise = daily_values.get("sunrise")
+                .and_then(|item| {
+                    if let Some(ts) = item.value.as_i64() {
+                        Utc.timestamp_opt(ts, 0).single()
+                    } else if let Some(s) = item.value.as_str() {
+                        chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M")
+                            .ok()
+                            .and_then(|ndt| local_tz.from_local_datetime(&ndt).earliest())
+                            .map(|dt| dt.with_timezone(&Utc))
+                    } else {
+                        None
+                    }
+                });
 
-            let sunset_val = daily_values.get("sunset")
-                .and_then(|item| item.value.as_i64());
-            let sunset = sunset_val.and_then(|ss_ts| Utc.timestamp_opt(ss_ts, 0).single());
+            let sunset = daily_values.get("sunset")
+                .and_then(|item| {
+                    if let Some(ts) = item.value.as_i64() {
+                        Utc.timestamp_opt(ts, 0).single()
+                    } else if let Some(s) = item.value.as_str() {
+                        chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M")
+                            .ok()
+                            .and_then(|ndt| local_tz.from_local_datetime(&ndt).earliest())
+                            .map(|dt| dt.with_timezone(&Utc))
+                    } else {
+                        None
+                    }
+                });
 
-            // For report's main sunrise/sunset, only take the first day's values if available
+            // For report's main summary fields, take the first day's values if available
             if weather_report.sunrise.is_none() {
                 weather_report.sunrise = sunrise;
             }
             if weather_report.sunset.is_none() {
                 weather_report.sunset = sunset;
+            }
+            if weather_report.temp_max.is_none() {
+                weather_report.temp_max = temp_max;
+            }
+            if weather_report.temp_min.is_none() {
+                weather_report.temp_min = temp_min;
             }
 
             if let (Some(temp_max), Some(temp_min)) = (temp_max, temp_min) {
@@ -399,6 +410,35 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
             }
         }
         weather_report.daily_forecast = daily_entries;
+    }
+
+    // Fallback: If temp_min/max are still None, try to calculate from today's hourly data
+    if weather_report.temp_min.is_none() || weather_report.temp_max.is_none() {
+        if !weather_report.hourly_forecast.is_empty() {
+            let local_timezone = weather_report.timezone_offset
+                .and_then(|offset| FixedOffset::east_opt(offset))
+                .unwrap_or_else(|| FixedOffset::east_opt(0).unwrap());
+            
+            let local_now = weather_report.datetime.with_timezone(&local_timezone);
+            let today_date = local_now.date_naive();
+
+            let temps: Vec<f64> = weather_report.hourly_forecast.iter()
+                .filter(|entry| {
+                    let item_local = entry.time.with_timezone(&local_timezone);
+                    item_local.date_naive() == today_date
+                })
+                .map(|entry| entry.temperature)
+                .collect();
+
+            if !temps.is_empty() {
+                if weather_report.temp_min.is_none() {
+                    weather_report.temp_min = Some(temps.iter().copied().fold(f64::INFINITY, f64::min));
+                }
+                if weather_report.temp_max.is_none() {
+                    weather_report.temp_max = Some(temps.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+                }
+            }
+        }
     }
 
     Ok(weather_report)

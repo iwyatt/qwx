@@ -16,15 +16,13 @@ pub enum WeatherApiProvider {
 /// Custom error type for the weather_api module.
 #[derive(Debug)]
 pub enum WeatherApiError {
-    ApiError(String), // For errors returned by the API itself
     Other(anyhow::Error),
 }
 
 impl fmt::Display for WeatherApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            WeatherApiError::ApiError(msg) => write!(f, "API Error: {}", msg),
-            WeatherApiError::Other(err) => write!(f, "Other Error: {}", err),
+            WeatherApiError::Other(err) => write!(f, "Error: {}", err),
         }
     }
 }
@@ -33,7 +31,6 @@ impl std::error::Error for WeatherApiError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             WeatherApiError::Other(err) => Some(err.as_ref()),
-            _ => None,
         }
     }
 }
