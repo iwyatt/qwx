@@ -1,3 +1,4 @@
+use chrono::Timelike;
 use crate::model::WeatherReport;
 use chrono::FixedOffset;
 use std::collections::HashMap;
@@ -138,7 +139,7 @@ fn format_hourly_forecast(report: &WeatherReport, count: usize) -> Vec<String> {
 
     // Filter hourly forecast to only include entries strictly in the future relative to report.datetime
     let filtered_forecast = report.hourly_forecast.iter()
-        .filter(|entry| entry.time > report.datetime)
+        .filter(|entry| entry.time.naive_utc() >= report.datetime.naive_utc().date().and_hms_opt(report.datetime.naive_utc().hour(), 0, 0).unwrap())
         .take(count);
 
     for entry in filtered_forecast {
@@ -603,6 +604,71 @@ mod tests {
 
     #[test]
     fn test_format_weather_report_hourly_forecast_filtering() {
+
+    #[test]
+    fn test_format_weather_report_hourly_forecast_includes_current_hour() {
+        use crate::model::HourlyForecastEntry;
+
+        let report_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 30, 0).unwrap();
+
+        let report = WeatherReport {
+            city_name: Some("Testville".to_string()),
+            state: None,
+            country: Some("US".to_string()),
+            temperature: 50.0,
+            dew_point: Some(41.0),
+            feels_like: 46.0,
+            temp_min: None,
+            temp_max: None,
+            pressure: Some(1010),
+            humidity: Some(70),
+            current_precipitation_chance: None,
+            weather_condition: WeatherCondition::Clear,
+            wind_speed: 10.0,
+            wind_deg: Some(180),
+            sunrise: None,
+            sunset: None,
+            datetime: report_time,
+            timezone_offset: Some(0),
+            latitude: 0.0,
+            longitude: 0.0,
+            daily_forecast: Vec::new(),
+            hourly_forecast: vec![
+                HourlyForecastEntry {
+                    time: Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap(), // Current hour, previous minutes
+                    temperature: 42.0,
+                    weather_condition: WeatherCondition::Clear,
+                    precipitation_chance: None,
+                    wind_speed: 5.0,
+                    wind_deg: Some(0),
+                    dew_point: None,
+                    feels_like: None,
+                    humidity: None,
+                    pressure: None,
+                },
+                HourlyForecastEntry {
+                    time: Utc.with_ymd_and_hms(2023, 1, 1, 13, 0, 0).unwrap(), // Future
+                    temperature: 44.0,
+                    weather_condition: WeatherCondition::Clear,
+                    precipitation_chance: None,
+                    wind_speed: 5.0,
+                    wind_deg: Some(0),
+                    dew_point: None,
+                    feels_like: None,
+                    humidity: None,
+                    pressure: None,
+                },
+            ],
+            metar: None,
+            taf: None,
+        };
+
+        let formatted = format_weather_report(&report, false, Some(12), None, None);
+        let lines: Vec<&str> = formatted.lines().collect();
+
+        // Should include the 12:00 entry
+        assert!(lines.iter().any(|line| line.contains("12:00 🌡️42F")));
+    }
         use crate::model::HourlyForecastEntry;
 
         let report_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap();
@@ -675,8 +741,73 @@ mod tests {
         let lines: Vec<&str> = formatted.lines().collect();
 
         // Should only show the entry for 13:00
+        // Should show the entries for 12:00 and 13:00
         assert!(lines.iter().any(|line| line.contains("13:00 🌡️44F")));
         assert!(!lines.iter().any(|line| line.contains("11:00 🌡️40F")));
-        assert!(!lines.iter().any(|line| line.contains("12:00 🌡️42F")));
+        assert!(lines.iter().any(|line| line.contains("12:00 🌡️42F")));
+    }
+    #[test]
+    fn test_format_weather_report_hourly_forecast_includes_current_hour() {
+        use crate::model::HourlyForecastEntry;
+
+        let report_time = Utc.with_ymd_and_hms(2023, 1, 1, 12, 30, 0).unwrap();
+
+        let report = WeatherReport {
+            city_name: Some("Testville".to_string()),
+            state: None,
+            country: Some("US".to_string()),
+            temperature: 50.0,
+            dew_point: Some(41.0),
+            feels_like: 46.0,
+            temp_min: None,
+            temp_max: None,
+            pressure: Some(1010),
+            humidity: Some(70),
+            current_precipitation_chance: None,
+            weather_condition: WeatherCondition::Clear,
+            wind_speed: 10.0,
+            wind_deg: Some(180),
+            sunrise: None,
+            sunset: None,
+            datetime: report_time,
+            timezone_offset: Some(0),
+            latitude: 0.0,
+            longitude: 0.0,
+            daily_forecast: Vec::new(),
+            hourly_forecast: vec![
+                HourlyForecastEntry {
+                    time: Utc.with_ymd_and_hms(2023, 1, 1, 12, 0, 0).unwrap(), // Current hour, previous minutes
+                    temperature: 42.0,
+                    weather_condition: WeatherCondition::Clear,
+                    precipitation_chance: None,
+                    wind_speed: 5.0,
+                    wind_deg: Some(0),
+                    dew_point: None,
+                    feels_like: None,
+                    humidity: None,
+                    pressure: None,
+                },
+                HourlyForecastEntry {
+                    time: Utc.with_ymd_and_hms(2023, 1, 1, 13, 0, 0).unwrap(), // Future
+                    temperature: 44.0,
+                    weather_condition: WeatherCondition::Clear,
+                    precipitation_chance: None,
+                    wind_speed: 5.0,
+                    wind_deg: Some(0),
+                    dew_point: None,
+                    feels_like: None,
+                    humidity: None,
+                    pressure: None,
+                },
+            ],
+            metar: None,
+            taf: None,
+        };
+
+        let formatted = format_weather_report(&report, false, Some(12), None, None);
+        let lines: Vec<&str> = formatted.lines().collect();
+
+        // Should include the 12:00 entry
+        assert!(lines.iter().any(|line| line.contains("12:00 🌡️42F")));
     }
 }
