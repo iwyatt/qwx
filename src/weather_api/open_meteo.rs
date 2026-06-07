@@ -173,9 +173,7 @@ pub async fn get_current_weather_report(search_term: &str) -> Result<WeatherRepo
     let current_weather_data = om_response.forecast_data.current
         .ok_or_else(|| anyhow!("No current weather data found in Open-Meteo response"))?;
 
-    let datetime = local_tz.from_local_datetime(&current_weather_data.datetime).earliest()
-        .ok_or_else(|| anyhow!("Failed to convert current weather time to UTC"))?
-        .with_timezone(&Utc);
+    let datetime = Utc::now();
 
     let weather_code_val = current_weather_data.values.get("weather_code")
         .ok_or_else(|| anyhow!("Failed to get weather_code from values"))?;
